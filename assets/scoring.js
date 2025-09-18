@@ -1,375 +1,371 @@
-/* BrainPreserve — Brain Threat Analysis
-   SCORING ENGINE (no UI here)
-   - Pure functions that compute scores, tiers, and normalized percentages.
-   - Reads bands and settings from:
-       1) window.BT_CFG (from assets/config.js)  [always available]
-       2) window.BT_CONFIG (JSON from data/instruments_config.json) [available by the time app.js calls us]
-   - Exposes a single global: window.BT_Scoring
-*/
-(function(){
-  // -----------------------------
-  // Helpers
-  // -----------------------------
-  function getConfig(){
-    // BT_CFG is loaded first; BT_CONFIG is loaded by app.js before scoring is called.
-    const base = (typeof window!=="undefined" && window.BT_CFG) ? window.BT_CFG : { paths:{}, ui:{} };
-    const form = (typeof window!=="undefined" && window.BT_CONFIG) ? window.BT_CONFIG : { bands:{}, scales:{} };
-    return { base, form };
-  }
+// assets/scoring.js
+(function () {
+  "use strict";
 
-  function pickBand(value, bands){
-    if (bands && Array.isArray(bands)) {
-      for (const b of bands){
-        if (value >= b.min && value <= b.max) return b.label;
+  // Public API: window.BT_SCORING.compute(payload)
+  // - Reads ONLY from instruments_config.json (payload.config) and current responses (payload.responses)
+  // - Applies EXACT scoring/banding rules encoded in the config (no CSV influence)
+  // - Returns a structured object that summary.js will render
+
+  // -----------------------------
+  // Utilities
+  // -----------------------------
+  const isNum = (v) => v !== null && v !== undefined && !Number.isNaN(Number(v));
+  const toNum = (v, d = 0) => (isNum(v) ? Number(v) : d);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Map a numeric value into a band from config: [{min, max, label, level}]
+  function bandFromCuts(value, bands = []) {
+    for (const b of bands) {
+      if ((b.min === undefined || value >= b.min) && (b.max === undefined || value <= b.max)) {
+        return { label: b.label || "", level: b.level || "", min: b.min, max: b.max };
       }
     }
-    return "—";
+    return { label: "", level: "" };
   }
 
-  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
-  function pct(score, max){ return max>0 ? Math.round((score / max) * 100) : 0; }
-
-  // Map text tiers to a 1..4 threat weight for composite building
-  // (Higher = worse threat; used only for internal normalization.)
-  const TIER_WEIGHT = {
-    "Very High": 4, "very high": 4,
-    "High": 3, "high": 3, "Significant/High Risk (26–40) — Refer": 4,
-    "Moderate": 2, "moderate": 2, "Mild–Moderate Risk (10–24)": 2,
-    "Some/Lower": 1, "Lower": 1, "neutral": 1, "some": 1, "No significant sleep concerns": 1, "Low": 1, "Low Stress": 1,
-    "Low loneliness": 1, "Low risk (socially well-connected)": 1, "Low Risk (0–8)": 1
-  };
-
-  function tierWeight(label){
-    if (!label) return 1;
-    return TIER_WEIGHT.hasOwnProperty(label) ? TIER_WEIGHT[label] : 1;
+  // Map a PERCENT (0–100) into bands
+  function bandFromPercent(pct, percentBands = []) {
+    return bandFromCuts(pct, percentBands);
   }
 
-  // -----------------------------
-  // Personal: Demographics (Age/BMI), History (Y/N), Sleep (Likert), Stress (Likert), Activity (Y/N)
-  // answers.personal: {
-  //   sex: "Female" | "Male" | "Other...",
-  //   age: number | null,
-  //   units: "US" | "Metric",
-  //   height: { ft?, in?, m? }, weight: { lb?, kg? },
-  //   history: { heart?: "Yes"|"No", ... },
-  //   sleep: { sleep1..sleep6?: 0..4 },
-  //   stress:{ stress1..stress4?: 0..4 },
-  //   activity:{ steps?:"Yes"|"No", aerobic?:"Yes"|"No", strength?:"Yes"|"No" }
-  // }
-  // -----------------------------
-  function computeBMI(units, height, weight){
-    if (units === "US"){
-      const ft = parseFloat(height?.ft), inches = parseFloat(height?.in), lb = parseFloat(weight?.lb);
-      if (ft>0 && inches>=0 && lb>0){
-        const m = (ft*12 + inches)*0.0254;
-        const kg = lb*0.45359237;
-        return kg/(m*m);
-      }
-      return null;
-    } else {
-      const m = parseFloat(height?.m), kg = parseFloat(weight?.kg);
-      if (m>0 && kg>0) return kg/(m*m);
-      return null;
-    }
-  }
+  // Likert computation (supports reverse-scored items)
+  // inst.likert.scaleMax: number (e.g., 4)
+  // inst.items: [{ key, reverse?: true }]
+  function computeLikert(inst, responses) {
+    const scaleMax = toNum(inst.likert?.scaleMax, 4);
+    let total = 0;
+    let answered = 0;
 
-  function sumLikert(group, reverseIds){
-    // group: {key: 0..4}; reverseIds: Set of ids to reverse (4 - v)
-    let sum = 0, answered = 0;
-    if (!group) return { sum:0, answered:0 };
-    for (const [k, vRaw] of Object.entries(group)){
-      const v = Number(vRaw);
-      if (!isNaN(v)){
-        const vv = reverseIds && reverseIds.has(k) ? (4 - v) : v;
-        sum += vv; answered++;
+    if (Array.isArray(inst.items)) {
+      for (const it of inst.items) {
+        const raw = toNum(responses[it.key], null);
+        if (raw === null) continue;
+        const val = it.reverse ? clamp(scaleMax - raw, 0, scaleMax) : clamp(raw, 0, scaleMax);
+        total += val;
+        answered += 1;
       }
     }
-    return { sum, answered };
+    const res = {
+      type: "likert",
+      total,
+      answered,
+      max: (Array.isArray(inst.items) ? inst.items.length : 0) * scaleMax,
+      bands: inst.likert?.bands || [],
+    };
+    const b = bandFromCuts(total, res.bands);
+    return { ...res, band: b };
   }
 
-  function computePersonal(answers){
-    const { form } = getConfig();
-    const bands = form.bands || {};
-    const sleepBands = bands.sleepBands || [];
-    const stressBands = bands.stressBands || [];
-    const ageBands = bands.ageBands || [];
-    const bmiBands = bands.bmiBands || [];
+  // Radio group as numeric sum (used if a scale is modeled via radio instead of likert)
+  function computeRadio(inst, responses) {
+    let total = 0;
+    let answered = 0;
+    if (Array.isArray(inst.items)) {
+      for (const it of inst.items) {
+        const raw = responses[it.key];
+        if (raw === undefined || raw === "") continue;
+        total += toNum(raw, 0);
+        answered += 1;
+      }
+    }
+    const res = {
+      type: "radio",
+      total,
+      answered,
+      max: Array.isArray(inst.items)
+        ? inst.items.reduce((m, it) => Math.max(m, toNum(it.maxValue ?? it.max ?? 0)), 0)
+        : 0,
+      bands: inst.bands || [],
+    };
+    const b = bandFromCuts(total, res.bands);
+    return { ...res, band: b };
+  }
 
-    // Age/BMI tiers (textual)
-    const age = Number(answers?.age);
-    const ageTier = isNaN(age) ? "—" : pickBand(age, ageBands);
+  // Y/N list: sum points for checked items (supports per-item scoreIfChecked / scoreIfUnchecked)
+  function computeYnList(inst, responses) {
+    let total = 0;
+    let answered = 0;
 
-    const bmiVal = computeBMI(answers?.units, answers?.height, answers?.weight);
-    const bmiTier = typeof bmiVal === "number" ? pickBand(bmiVal, bmiBands) : "—";
+    if (Array.isArray(inst.items)) {
+      for (const it of inst.items) {
+        const v = responses[it.key];
+        if (v === undefined) continue;
+        answered += 1;
+        const checked = v === "1" || v === 1 || v === true || v === "true";
+        const pts = checked ? toNum(it.scoreIfChecked, 0) : toNum(it.scoreIfUnchecked, 0);
+        total += pts;
+      }
+    }
+    const res = {
+      type: "yn_list",
+      total,
+      answered,
+      max: Array.isArray(inst.items)
+        ? inst.items.reduce(
+            (acc, it) => acc + Math.max(toNum(it.scoreIfChecked, 0), toNum(it.scoreIfUnchecked, 0)),
+            0
+          )
+        : 0,
+      bands: inst.bands || [],
+    };
+    const b = bandFromCuts(total, res.bands);
+    return { ...res, band: b };
+  }
 
-    // History Y/N → if Yes, use mapped tier; we'll normalize to a 1..4 weight list
-    const historyDefs = (form.sections.find(s=>s.id==="personal")?.subsections.find(ss=>ss.id==="history_yesno")?.items) || [];
-    const historyRisks = [];
-    let historyScore=0, historyMax = historyDefs.length * 4;
-    if (answers?.history){
-      for (const def of historyDefs){
-        const v = answers.history[def.id]; // "Yes" | "No" | undefined
-        if (v === "Yes"){
-          historyRisks.push({ id:def.id, tier:def.yesTier });
-          historyScore += tierWeight(def.yesTier);
+  // Weighted selects (each item has options with numeric weights)
+  // Computes sum, max, percent-of-max, then maps percent into percentBands
+  function computeWeightedSelect(inst, responses) {
+    let total = 0;
+    let max = 0;
+    let answered = 0;
+
+    if (Array.isArray(inst.items)) {
+      for (const it of inst.items) {
+        const options = Array.isArray(it.options) ? it.options : [];
+        const selected = toNum(responses[it.key], null);
+        const maxOpt = options.reduce((m, op) => Math.max(m, toNum(op.value, 0)), 0);
+        max += maxOpt;
+
+        if (selected !== null) {
+          answered += 1;
+          total += clamp(selected, 0, maxOpt);
         }
       }
     }
+    const pct = max > 0 ? (total / max) * 100 : 0;
+    const res = {
+      type: "weighted_select",
+      total,
+      max,
+      percent: pct,
+      answered,
+      percentBands: inst.percentBands || [],
+    };
+    const b = bandFromPercent(pct, res.percentBands);
+    return { ...res, band: b };
+  }
 
-    // Sleep Likert 0..4 * 6
-    const { sum:sleepSum } = sumLikert(answers?.sleep, /*reverse*/null);
-    const sleepTier = pickBand(sleepSum, sleepBands);
-    const sleepScore = sleepSum;     // 0..24
-    const sleepMax   = 24;
+  // Medications: sum weights of selected meds
+  // inst.classes: [{ key, title, meds: [{ key, weight }] }]
+  // Optional: inst.bands for total→tier mapping
+  function computeMedications(inst, responses) {
+    let total = 0;
+    let checkedCount = 0;
 
-    // Stress Likert 0..4 * 4 (reverse items 2,3)
-    const rev = new Set(["stress2","stress3"]);
-    const { sum:stressSum } = sumLikert(answers?.stress, rev);
-    const stressTier = pickBand(stressSum, stressBands);
-    const stressScore = stressSum;   // 0..16
-    const stressMax   = 16;
-
-    // Activity Y/N → if "No", use noTier
-    const activityDefs = (form.sections.find(s=>s.id==="personal")?.subsections.find(ss=>ss.id==="activity_yesno")?.items) || [];
-    const activityRisks = [];
-    let activityScore=0, activityMax = activityDefs.length * 4;
-    if (answers?.activity){
-      for (const def of activityDefs){
-        const v = answers.activity[def.id];
-        if (v === "No"){
-          activityRisks.push({ id:def.id, tier:def.noTier });
-          activityScore += tierWeight(def.noTier);
+    if (Array.isArray(inst.classes)) {
+      for (const cls of inst.classes) {
+        if (!Array.isArray(cls.meds)) continue;
+        for (const med of cls.meds) {
+          const v = responses[med.key];
+          const isChecked = v === "1" || v === 1 || v === true || v === "true";
+          if (isChecked) {
+            checkedCount += 1;
+            total += toNum(med.weight, 0);
+          }
         }
       }
     }
+    const res = {
+      type: "medications",
+      total,
+      checkedCount,
+      bands: inst.bands || [],
+    };
+    const b = bandFromCuts(total, res.bands);
+    return { ...res, band: b };
+  }
 
-    // Convert age/BMI tiers into normalized threat weights (1..4) so they also contribute to composite
-    const ageW = tierWeight(ageTier), bmiW = tierWeight(bmiTier);
-    const ageMax=4, bmiMax=4;
+  // Demographics: compute age band; BMI band from height (cm) & weight (kg) using config cut-points
+  function computeDemographics(inst, responses) {
+    let age = null;
+    let bmi = null;
+    let ageBand = { label: "", level: "" };
+    let bmiBand = { label: "", level: "" };
 
-    // Personal composite (normalized across all parts)
-    const parts = [
-      {score:ageW,       max:ageMax},
-      {score:bmiW,       max:bmiMax},
-      {score:historyScore, max:historyMax},
-      {score:activityScore,max:activityMax},
-      {score:sleepScore, max:sleepMax},
-      {score:stressScore,max:stressMax}
-    ];
-    const totScore = parts.reduce((a,p)=>a+p.score,0);
-    const totMax   = parts.reduce((a,p)=>a+p.max,0);
-    const totPct   = pct(totScore, totMax);
+    if (inst.fields?.age?.key) {
+      const a = toNum(responses[inst.fields.age.key], null);
+      if (a !== null) {
+        age = a;
+        ageBand = bandFromCuts(a, inst.ageBands || []);
+      }
+    }
+    if (inst.fields?.height?.key && inst.fields?.weight?.key) {
+      const hCm = toNum(responses[inst.fields.height.key], null);
+      const wKg = toNum(responses[inst.fields.weight.key], null);
+      if (hCm && wKg) {
+        const hM = hCm / 100;
+        const calc = wKg / (hM * hM);
+        bmi = Math.round(calc * 10) / 10;
+        bmiBand = bandFromCuts(bmi, inst.bmiBands || []);
+      }
+    }
+    return {
+      type: "demographics",
+      age,
+      ageBand,
+      bmi,
+      bmiBand,
+    };
+  }
 
-    // Map to overall personal tier using the same 0–100 → 4 bins as global for stability
-    const personalTier =
-      (totPct>=75) ? "Very High" :
-      (totPct>=50) ? "High"      :
-      (totPct>=25) ? "Moderate"  : "Low";
+  // BMI-only instrument (if present separately)
+  function computeBmi(inst, responses) {
+    let bmi = null;
+    let bmiBand = { label: "", level: "" };
+    if (inst.fields?.height?.key && inst.fields?.weight?.key) {
+      const hCm = toNum(responses[inst.fields.height.key], null);
+      const wKg = toNum(responses[inst.fields.weight.key], null);
+      if (hCm && wKg) {
+        const hM = hCm / 100;
+        const calc = wKg / (hM * hM);
+        bmi = Math.round(calc * 10) / 10;
+        bmiBand = bandFromCuts(bmi, inst.bmiBands || []);
+      }
+    }
+    return { type: "bmi", bmi, bmiBand };
+  }
+
+  // -----------------------------
+  // Dispatcher
+  // -----------------------------
+  function computeInstrument(inst, responses) {
+    switch (inst.type) {
+      case "demographics":
+        return computeDemographics(inst, responses);
+      case "bmi":
+        return computeBmi(inst, responses);
+      case "yn_list":
+        return computeYnList(inst, responses);
+      case "likert":
+        return computeLikert(inst, responses);
+      case "radio":
+        return computeRadio(inst, responses);
+      case "weighted_select":
+        return computeWeightedSelect(inst, responses);
+      case "medications":
+        return computeMedications(inst, responses);
+      default:
+        return { type: "unknown", note: `Unsupported instrument type: ${inst.type}` };
+    }
+  }
+
+  // Aggregate per-category summaries if requested by config
+  function summarizeCategory(catKey, catDef, instResults) {
+    // Optional custom aggregation in config.categories[].summary:
+    //   { mode: "sum|percent|custom", sources: ["instKey1","instKey2"], bands: [...] }
+    const summaryDef = catDef.summary;
+    if (!summaryDef) return null;
+
+    const byKey = Object.create(null);
+    instResults.forEach((r) => (byKey[r.key] = r));
+
+    let value = null;
+    let percent = null;
+
+    if (summaryDef.mode === "sum") {
+      value = 0;
+      for (const k of summaryDef.sources || []) {
+        const r = byKey[k];
+        if (!r) continue;
+        if (isNum(r.total)) value += Number(r.total);
+      }
+    } else if (summaryDef.mode === "percent") {
+      // Weighted-select style percent (sum totals / sum max)
+      let t = 0,
+        m = 0;
+      for (const k of summaryDef.sources || []) {
+        const r = byKey[k];
+        if (!r) continue;
+        t += toNum(r.total, 0);
+        m += toNum(r.max, 0);
+      }
+      percent = m > 0 ? (t / m) * 100 : 0;
+    } else if (typeof summaryDef.compute === "function") {
+      // Not used in static build; reserved for future extensions
+    }
+
+    const bands = summaryDef.percentBands || summaryDef.bands || [];
+    const band =
+      percent !== null ? bandFromPercent(percent, bands) : value !== null ? bandFromCuts(value, bands) : { label: "", level: "" };
 
     return {
-      id: "personal",
-      score: totScore, max: totMax, pct: totPct, tier: personalTier,
-      details: {
-        age: { value: isNaN(age)? null : age, tier: ageTier, weight: ageW },
-        bmi: { value: typeof bmiVal==="number" ? Number(bmiVal.toFixed(1)) : null, tier: bmiTier, weight: bmiW },
-        history: { risks: historyRisks, score: historyScore, max: historyMax },
-        activity:{ risks: activityRisks, score: activityScore, max: activityMax },
-        sleep:   { sum: sleepScore, max: sleepMax, tier: sleepTier },
-        stress:  { sum: stressScore, max: stressMax, tier: stressTier }
-      }
+      type: "category_summary",
+      value,
+      percent,
+      band,
     };
   }
 
   // -----------------------------
-  // Social & Loneliness
-  // answers.social: {
-  //   lsns: { lsns1..lsns6?: 0..5 },   // lower total = worse network
-  //   ucla: { ucla1..ucla3?: 1..3 }    // higher total = more lonely
-  // }
+  // MAIN
   // -----------------------------
-  function computeSocial(answers){
-    const { form } = getConfig();
-    const bands = form.bands || {};
-    const lsnsBands = bands.lsnsBands || [];
-    const uclaBands = bands.uclaBands || [];
-
-    // LSNS sum 0..30 (lower is worse)
-    const { sum:lsnsSum } = sumLikert(answers?.lsns, /*reverse*/null); // values already 0..5
-    const lsnsTier = pickBand(lsnsSum, lsnsBands);
-
-    // UCLA sum 3..9 (higher is worse)
-    // Our inputs are 1..3 per item; sumLikert (0..4) isn't used here; compute directly:
-    let uclaSum=0, uclaAnswered=0;
-    if (answers?.ucla){
-      for (const v of Object.values(answers.ucla)){
-        const n = Number(v);
-        if (!isNaN(n)){ uclaSum += n; uclaAnswered++; }
-      }
-    }
-    const uclaTier = pickBand(uclaSum, uclaBands);
-
-    // Convert to threat where higher = worse (match your WP logic):
-    const lsnsThreat = 30 - lsnsSum; // 0 (best)..30 (worst)
-    const uclaThreat = uclaSum - 3;  // 0 (best)..6 (worst)
-
-    const score = lsnsThreat + uclaThreat; // 0..36
-    const max   = 36;
-    const p     = pct(score, max);
-
-    const tier =
-      (p>=75) ? "Very High" :
-      (p>=50) ? "High"      :
-      (p>=25) ? "Moderate"  : "Low";
-
-    return {
-      id: "social",
-      score, max, pct: p, tier,
-      details: {
-        lsns: { sum: lsnsSum, tier: lsnsTier },
-        ucla: { sum: uclaSum, tier: uclaTier }
-      }
+  function compute(payload) {
+    const config = payload?.config || {};
+    const responses = payload?.responses || {};
+    const out = {
+      sections: [],
+      overall: {},
+      debug: { missingInstruments: [] },
     };
-  }
 
-  // -----------------------------
-  // Sensory (Hearing: HHIE-S; Vision: VFQ-3-of-7)
-  // answers.sensory: {
-  //   hhies: { h1..h10?: 0|2|4 },  // Yes=4, Sometimes=2, No=0
-  //   vfq7:  { v1..v7?: 1..6 }     // routing uses 3 of 7 items
-  // }
-  // -----------------------------
-  function scoreHHIES(h){
-    // Sum 10 items, 0..40
-    let sum=0, answered=0;
-    if (h){
-      for (const v of Object.values(h)){
-        const n = Number(v); if (!isNaN(n)){ sum+=n; answered++; }
+    const categories = Array.isArray(config.categories) ? config.categories : [];
+    for (const cat of categories) {
+      const instResults = [];
+
+      // flat instruments
+      if (Array.isArray(cat.instruments)) {
+        for (const inst of cat.instruments) {
+          const result = computeInstrument(inst, responses);
+          instResults.push({ key: inst.key, title: inst.title || "", ...result });
+        }
       }
+
+      // sub-accordions instruments
+      if (Array.isArray(cat.subAccordions)) {
+        for (const sub of cat.subAccordions) {
+          if (!Array.isArray(sub.instruments)) continue;
+          for (const inst of sub.instruments) {
+            const result = computeInstrument(inst, responses);
+            instResults.push({ key: inst.key, title: inst.title || "", sub: sub.key, ...result });
+          }
+        }
+      }
+
+      const catSummary = summarizeCategory(cat.key, cat, instResults);
+
+      out.sections.push({
+        key: cat.key,
+        title: cat.title || "",
+        instruments: instResults,
+        summary: catSummary,
+      });
     }
-    return { sum, answered };
-  }
 
-  function scoreVFQ3of7(v){
-    // Reproduce your validated 3-of-7 routing.
-    // Returns score 0..100 (higher = better)
-    if (!v) return { score:null, used:[], complete:false };
-
-    const A11b = Number(v["v1"]); // required first
-    if (isNaN(A11b)) return { score:null, used:[], complete:false };
-
-    let p = 1.145 - 0.085*A11b;
-    const used = ["1"];
-
-    function need(name){ const n = Number(v[name]); return isNaN(n) ? null : n; }
-
-    if (A11b === 1){
-      const A3 = need("v2"); if (A3===null) return { score:null, used, complete:false };
-      p -= 0.043*A3; used.push("2");
-      if (A3 < 3){
-        const q2 = need("v4"); if (q2===null) return { score:null, used, complete:false };
-        p -= 0.029*q2; used.push("4");
-      } else {
-        const q17 = need("v5"); if (q17===null) return { score:null, used, complete:false };
-        p -= 0.054*q17; used.push("5");
+    // Optional overall aggregator (e.g., sum of category percentages or weighted scheme)
+    if (typeof config.overall?.compute === "string") {
+      // reserved for future inline expressions (not used here)
+    } else if (config.overall?.mode === "percent") {
+      let t = 0,
+        m = 0;
+      for (const sec of out.sections) {
+        // sum all weighted_select style instruments
+        for (const inst of sec.instruments) {
+          if (inst.type === "weighted_select") {
+            t += toNum(inst.total, 0);
+            m += toNum(inst.max, 0);
+          }
+        }
       }
+      const pct = m > 0 ? (t / m) * 100 : 0;
+      const band = bandFromPercent(pct, config.overall.percentBands || []);
+      out.overall = { mode: "percent", percent: pct, band };
     } else {
-      const q11 = need("v3"); if (q11===null) return { score:null, used, complete:false };
-      p -= 0.104*q11; used.push("3");
-      if (q11 === 1){
-        const q24 = need("v6"); if (q24===null) return { score:null, used, complete:false };
-        p -= 0.058*q24; used.push("6");
-      } else {
-        const A9 = need("v7"); if (A9===null) return { score:null, used, complete:false };
-        p -= 0.031*A9; used.push("7");
-      }
+      out.overall = {};
     }
 
-    p = clamp(p, 0.001, 0.999);
-    const score = 72.63 - 31.44*p - 9.423*Math.log(p/(1-p));
-    // Program-level functional tiers (higher=better) will be assigned in summary/renderer.
-    return { score: clamp(score, 0, 100), used, complete:true };
+    return out;
   }
 
-  function computeSensory(answers){
-    const { form } = getConfig();
-    const hhBands = (form.bands && form.bands.hhiesBands) || [];
-
-    // HHIE-S
-    const { sum:hhSum } = scoreHHIES(answers?.hhies);
-    const hhTier = pickBand(hhSum, hhBands);  // text like "Low Risk (0–8)" etc.
-
-    // VFQ-3-of-7 (higher = better). We convert to threat (100 - score) for composite.
-    const vres = scoreVFQ3of7(answers?.vfq7);
-    const vfqScore = (vres && vres.complete) ? vres.score : null;
-
-    // Normalize to a composite threat percentage for the Sensory section:
-    //  - Hearing threat component: hhSum / 40 (0..1)
-    //  - Vision threat component: (100 - vfq)/100 (0..1) if available; if not answered, weight only hearing.
-    let compScore=0, compMax=0;
-
-    // Hearing contributes 40 points of threat space; Vision contributes 100 points.
-    compScore += hhSum; compMax += 40;
-    if (typeof vfqScore === "number"){
-      compScore += (100 - vfqScore); // 0 (best) .. 100 (worst)
-      compMax   += 100;
-    }
-
-    const p = pct(compScore, compMax || 40); // avoid /0; if no vision, use 40
-
-    const tier =
-      (p>=75) ? "Very High" :
-      (p>=50) ? "High"      :
-      (p>=25) ? "Moderate"  : "Low";
-
-    return {
-      id: "sensory",
-      score: compScore, max: compMax || 40, pct: p, tier,
-      details: {
-        hearing: { sum: hhSum, tier: hhTier, max: 40 },
-        vision:  { score: vfqScore, used: (vres?.used)||[], complete: !!(vres && vres.complete) }
-      }
-    };
-  }
-
-  // -----------------------------
-  // Combine sections → Overall Risk Tier
-  // Input: array of section results: [{id, score, max, pct, tier}, ...]
-  // Uses BT_CFG.overallRiskTiers thresholds on 0..100 composite.
-  // -----------------------------
-  function combineSections(sections){
-    const { base } = getConfig();
-    const tiers = base.overallRiskTiers || [
-      {minPct:0, maxPct:24, label:"Low"},
-      {minPct:25, maxPct:49, label:"Moderate"},
-      {minPct:50, maxPct:74, label:"High"},
-      {minPct:75, maxPct:100,label:"Very High"}
-    ];
-    // Weighted average by each section's max space to avoid bias
-    let totScore=0, totMax=0;
-    for (const s of sections){
-      if (typeof s?.score === "number" && typeof s?.max === "number" && s.max>0){
-        totScore += s.score;
-        totMax   += s.max;
-      }
-    }
-    const totalPct = pct(totScore, totMax);
-    let label = "Low";
-    for (const t of tiers){
-      if (totalPct >= t.minPct && totalPct <= t.maxPct){ label = t.label; break; }
-    }
-    return { totalPct, tier: label, score: totScore, max: totMax };
-  }
-
-  // -----------------------------
-  // Public API
-  // -----------------------------
-  const API = {
-    computePersonal,
-    computeSocial,
-    computeSensory,
-    combineSections
-  };
-
-  try { Object.defineProperty(window, "BT_Scoring", { value: API, writable:false, configurable:false }); }
-  catch(e){ window.BT_Scoring = API; }
+  window.BT_SCORING = { compute };
 })();
