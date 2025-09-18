@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "startCollapsed": true,
   "ui": { "categoryClearLabel": "Clear This Section", "caretClosed": "▸", "caretOpen": "▾" },
 
@@ -7,7 +7,7 @@
     {
       "id": "personal",
       "title": "Personal Assessment",
-      "note": "Demographics and anthropometrics used for age/BMI tiers.",
+      "note": "Demographics, BMI, and core health & lifestyle questionnaires.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -31,14 +31,6 @@
           "id": "bmi",
           "title": "Anthropometrics (BMI)",
           "type": "bmi",
-          "items": [
-            { "key": "units", "label": "Units", "options": ["US (lb, ft/in)","Metric (kg, m)"] },
-            { "key": "height_ft", "label": "Height (ft)" },
-            { "key": "height_in", "label": "Height (in)" },
-            { "key": "height_m", "label": "Height (m)" },
-            { "key": "weight_lb", "label": "Weight (lb)" },
-            { "key": "weight_kg", "label": "Weight (kg)" }
-          ],
           "bands": {
             "bmi": [
               { "min": -9999, "max": 20, "label": "Very High" },
@@ -49,6 +41,75 @@
               { "min": 41, "max": 9999, "label": "very high" }
             ]
           }
+        },
+        {
+          "id": "history_flags",
+          "title": "Medical & Lifestyle (Y/N)",
+          "type": "yn_list",
+          "items": [
+            { "key": "heart",  "label": "Heart Disease",                                   "csvKey": "heart",  "yesTier": "High" },
+            { "key": "hbp",    "label": "High Blood Pressure",                              "csvKey": "hbp",    "yesTier": "High" },
+            { "key": "dm",     "label": "Diabetes",                                         "csvKey": "dm",     "yesTier": "High" },
+            { "key": "thy",    "label": "Thyroid Disease",                                  "csvKey": "thy",    "yesTier": "Moderate" },
+            { "key": "ckd",    "label": "Kidney Disease",                                   "csvKey": "ckd",    "yesTier": "Moderate" },
+            { "key": "mood",   "label": "Depression/Anxiety or other Mental Health issue",  "csvKey": "mood",   "yesTier": "Moderate" },
+            { "key": "smoke",  "label": "Smoking",                                          "csvKey": "smoke",  "yesTier": "High" },
+            { "key": "alc",    "label": "Alcohol (risky/excess use)",                       "csvKey": "alc",    "yesTier": "Moderate" }
+          ]
+        },
+        {
+          "id": "sleep6",
+          "title": "Sleep Disturbance (6-item)",
+          "type": "likert",
+          "options": [
+            { "label": "Never", "value": 0 }, { "label": "Rarely", "value": 1 },
+            { "label": "Sometimes", "value": 2 }, { "label": "Often", "value": 3 }, { "label": "Always", "value": 4 }
+          ],
+          "items": [
+            { "key": "sleep1", "label": "Difficulty falling asleep" },
+            { "key": "sleep2", "label": "Wake during the night and can’t return to sleep" },
+            { "key": "sleep3", "label": "Wake too early and can’t return to sleep" },
+            { "key": "sleep4", "label": "Wake not feeling refreshed" },
+            { "key": "sleep5", "label": "Feel sleepy during the day" },
+            { "key": "sleep6", "label": "Take naps during the day" }
+          ],
+          "bands": [
+            { "min": 0,  "max": 5,  "label": "No significant sleep concerns" },
+            { "min": 6,  "max": 11, "label": "Mild sleep disturbance" },
+            { "min": 12, "max": 17, "label": "Moderate sleep disturbance" },
+            { "min": 18, "max": 24, "label": "Severe sleep disturbance" }
+          ]
+        },
+        {
+          "id": "pss4",
+          "title": "Perceived Stress (4-item)",
+          "type": "likert",
+          "reverseKeys": ["stress2","stress3"],
+          "options": [
+            { "label": "Never", "value": 0 }, { "label": "Rarely", "value": 1 },
+            { "label": "Sometimes", "value": 2 }, { "label": "Often", "value": 3 }, { "label": "Always", "value": 4 }
+          ],
+          "items": [
+            { "key": "stress1", "label": "Unable to control important things in life (past month)" },
+            { "key": "stress2", "label": "Felt confident about handling personal problems (past month)" },
+            { "key": "stress3", "label": "Felt that things were going your way (past month)" },
+            { "key": "stress4", "label": "Felt difficulties piling up too high to overcome (past month)" }
+          ],
+          "bands": [
+            { "min": 0,  "max": 5,  "label": "Low Stress" },
+            { "min": 6,  "max": 10, "label": "Moderate Stress" },
+            { "min": 11, "max": 16, "label": "High Stress" }
+          ]
+        },
+        {
+          "id": "activity_yn",
+          "title": "Physical Activity (Y/N thresholds)",
+          "type": "yn_list",
+          "items": [
+            { "key": "steps",    "label": "Walking/Steps ≥ 7,000 most days",             "csvKey": "steps",    "noTier": "Moderate" },
+            { "key": "aerobic",  "label": "Moderate/High intensity ≥150/75 min per week", "csvKey": "aerobic",  "noTier": "High" },
+            { "key": "strength", "label": "Strength training ≥ 2x per week",             "csvKey": "strength", "noTier": "High" }
+          ]
         }
       ]
     },
@@ -56,7 +117,6 @@
     {
       "id": "social",
       "title": "Social & Loneliness",
-      "note": "LSNS-6 (0–30; lower=worse), UCLA-3 (3–9; higher=worse).",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -65,12 +125,8 @@
           "type": "radio",
           "itemPrefix": "lsns",
           "options": [
-            { "label": "None", "value": 0 },
-            { "label": "One", "value": 1 },
-            { "label": "Two", "value": 2 },
-            { "label": "Three or four", "value": 3 },
-            { "label": "Five to eight", "value": 4 },
-            { "label": "Nine or more", "value": 5 }
+            { "label": "None", "value": 0 }, { "label": "One", "value": 1 }, { "label": "Two", "value": 2 },
+            { "label": "Three or four", "value": 3 }, { "label": "Five to eight", "value": 4 }, { "label": "Nine or more", "value": 5 }
           ],
           "items": [
             { "key": "lsns1", "label": "Relatives seen/heard ≥ monthly" },
@@ -81,7 +137,7 @@
             { "key": "lsns6", "label": "Friends you can call for help" }
           ],
           "bands": [
-            { "min": 0, "max": 11, "label": "High risk of social isolation" },
+            { "min": 0,  "max": 11, "label": "High risk of social isolation" },
             { "min": 12, "max": 15, "label": "Moderate risk of social isolation" },
             { "min": 16, "max": 30, "label": "Low risk (well-connected)" }
           ]
@@ -92,9 +148,7 @@
           "type": "radio",
           "itemPrefix": "ucla",
           "options": [
-            { "label": "Hardly ever", "value": 1 },
-            { "label": "Some of the time", "value": 2 },
-            { "label": "Often", "value": 3 }
+            { "label": "Hardly ever", "value": 1 }, { "label": "Some of the time", "value": 2 }, { "label": "Often", "value": 3 }
           ],
           "items": [
             { "key": "ucla1", "label": "Lack companionship" },
@@ -113,7 +167,6 @@
     {
       "id": "sensory",
       "title": "Sensory Assessment",
-      "note": "HHIE-S (0–40; higher=worse) and VFQ-3of7 (0–100; higher=better).",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -122,21 +175,19 @@
           "type": "radio",
           "itemPrefix": "h",
           "options": [
-            { "label": "Yes", "value": 4 },
-            { "label": "Sometimes", "value": 2 },
-            { "label": "No", "value": 0 }
+            { "label": "Yes", "value": 4 }, { "label": "Sometimes", "value": 2 }, { "label": "No", "value": 0 }
           ],
           "items": [
-            { "key": "h1", "label": "Embarrassed meeting new people" },
-            { "key": "h2", "label": "Frustrated talking to family" },
-            { "key": "h3", "label": "Difficulty hearing whispers" },
-            { "key": "h4", "label": "Feel handicapped by hearing problem" },
-            { "key": "h5", "label": "Difficulty visiting others" },
-            { "key": "h6", "label": "Attend religious services less often" },
-            { "key": "h7", "label": "Arguments with family members" },
-            { "key": "h8", "label": "Difficulty listening to TV/radio" },
-            { "key": "h9", "label": "Hearing limits social life" },
-            { "key": "h10","label": "Difficulty in restaurants" }
+            { "key": "h1",  "label": "Embarrassed meeting new people" },
+            { "key": "h2",  "label": "Frustrated talking to family" },
+            { "key": "h3",  "label": "Difficulty hearing whispers" },
+            { "key": "h4",  "label": "Feel handicapped by hearing problem" },
+            { "key": "h5",  "label": "Difficulty visiting others" },
+            { "key": "h6",  "label": "Attend religious services less often" },
+            { "key": "h7",  "label": "Arguments with family members" },
+            { "key": "h8",  "label": "Difficulty listening to TV/radio" },
+            { "key": "h9",  "label": "Hearing limits social life" },
+            { "key": "h10", "label": "Difficulty in restaurants" }
           ],
           "bands": [
             { "min": 0,  "max": 8,  "label": "Low Risk (0–8)" },
@@ -149,12 +200,12 @@
           "title": "Vision (VFQ-3of7)",
           "type": "radio",
           "itemPrefix": "v",
-          "note": "All seven inputs collected; scoring uses 3-of-7 per your WP logic.",
+          "note": "All seven captured; scoring uses 3-of-7.",
           "items": [
             { "key": "v1", "label": "Limited in activities because of vision?", "options": [ {"label":"All of the time","value":1},{"label":"Most of the time","value":2},{"label":"Some of the time","value":3},{"label":"A little of the time","value":4},{"label":"None of the time","value":5} ] },
             { "key": "v2", "label": "Difficulty reading small print (with glasses)?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] },
             { "key": "v3", "label": "Difficulty seeing others’ reactions?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] },
-            { "key": "v4", "label": "Overall eyesight (both eyes with correction)?", "options": [ {"label":"Excellent","value":1},{"label":"Good","value":2},{"label":"Fair","value":3},{"label":"Poor","value":4},{"label":"Very poor","value":5},{"label":"Completely blind","value":6} ] },
+            { "key": "v4", "label": "Overall eyesight (with correction)?", "options": [ {"label":"Excellent","value":1},{"label":"Good","value":2},{"label":"Fair","value":3},{"label":"Poor","value":4},{"label":"Very poor","value":5},{"label":"Completely blind","value":6} ] },
             { "key": "v5", "label": "Accomplish less because of vision?", "options": [ {"label":"All of the time","value":1},{"label":"Most","value":2},{"label":"Some","value":3},{"label":"A little","value":4},{"label":"None","value":5} ] },
             { "key": "v6", "label": "Need a lot of help due to eyesight?", "options": [ {"label":"Definitely true","value":1},{"label":"Mostly true","value":2},{"label":"Not sure","value":3},{"label":"Mostly false","value":4},{"label":"Definitely false","value":5} ] },
             { "key": "v7", "label": "Difficulty entertaining at home due to eyesight?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] }
@@ -172,7 +223,6 @@
     {
       "id": "medications",
       "title": "Medication Threat Assessment",
-      "note": "Select recognized medications/classes; current use carries class risk as in WP build.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -180,36 +230,12 @@
           "title": "Medication Classes",
           "type": "medications",
           "classes": [
-            {
-              "class": "First-Gen Antihistamines (strong anticholinergic)",
-              "baseRisk": 4,
-              "meds": ["diphenhydramine","doxylamine","dimenhydrinate","meclizine","chlorpheniramine","brompheniramine","clemastine"]
-            },
-            {
-              "class": "Tricyclics / Strong Anticholinergic Antidepressants",
-              "baseRisk": 4,
-              "meds": ["amitriptyline","doxepin","paroxetine"]
-            },
-            {
-              "class": "Antipsychotics",
-              "baseRisk": 3,
-              "meds": ["chlorpromazine","haloperidol","olanzapine","quetiapine","risperidone"]
-            },
-            {
-              "class": "Benzodiazepines",
-              "baseRisk": 3,
-              "meds": ["alprazolam","clonazepam","diazepam","lorazepam","oxazepam"]
-            },
-            {
-              "class": "H2 blockers",
-              "baseRisk": 2,
-              "meds": ["cimetidine","famotidine"]
-            },
-            {
-              "class": "Mood stabilizers/antiepileptics",
-              "baseRisk": 2,
-              "meds": ["carbamazepine","divalproex","valproate","mirtazapine","citalopram","escitalopram","sertraline"]
-            }
+            { "class": "First-Gen Antihistamines (strong anticholinergic)", "baseRisk": 4, "meds": ["diphenhydramine","doxylamine","dimenhydrinate","meclizine","chlorpheniramine","brompheniramine","clemastine"] },
+            { "class": "Tricyclics / Strong Anticholinergic Antidepressants", "baseRisk": 4, "meds": ["amitriptyline","doxepin","paroxetine"] },
+            { "class": "Antipsychotics", "baseRisk": 3, "meds": ["chlorpromazine","haloperidol","olanzapine","quetiapine","risperidone"] },
+            { "class": "Benzodiazepines", "baseRisk": 3, "meds": ["alprazolam","clonazepam","diazepam","lorazepam","oxazepam"] },
+            { "class": "H2 blockers", "baseRisk": 2, "meds": ["cimetidine","famotidine"] },
+            { "class": "Mood stabilizers/antiepileptics/other", "baseRisk": 2, "meds": ["carbamazepine","divalproex","valproate","mirtazapine","citalopram","escitalopram","sertraline"] }
           ],
           "statusOptions": [
             { "label": "No / Never used", "value": 0 },
@@ -223,7 +249,6 @@
     {
       "id": "plastics",
       "title": "Micro/Nanoplastic Exposure Assessment",
-      "note": "0–3 frequency × per-item weight; total mapped to risk tier (Low/Moderate/High/Very High) as in WP.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -237,17 +262,11 @@
             { "label": "Frequently – daily (3)", "value": 3 }
           ],
           "items": [
-            { "key": "packaging",  "label": "Food & Beverage Packaging", "weight": 3 },
-            { "key": "kitchen",    "label": "Kitchen & Cooking Tools",   "weight": 2 },
-            { "key": "homegoods",  "label": "Home Goods, Furniture & Toys", "weight": 2 },
-            { "key": "textiles",   "label": "Textiles / Laundry / Microfibers", "weight": 2 },
-            { "key": "dust",       "label": "Indoor Dust / Airborne Particulates", "weight": 1 }
-          ],
-          "bandsPct": [
-            { "min": 0,  "max": 24, "label": "Low" },
-            { "min": 25, "max": 49, "label": "Moderate" },
-            { "min": 50, "max": 74, "label": "High" },
-            { "min": 75, "max": 100,"label": "Very High" }
+            { "key": "packaging",  "csvKey": "packaging",  "label": "Food & Beverage Packaging",              "weight": 3 },
+            { "key": "kitchen",    "csvKey": "kitchen",    "label": "Kitchen & Cooking Tools",                 "weight": 2 },
+            { "key": "homegoods",  "csvKey": "homegoods",  "label": "Home Goods, Furniture & Toys",           "weight": 2 },
+            { "key": "textiles",   "csvKey": "textiles",   "label": "Textiles / Laundry / Microfibers",       "weight": 2 },
+            { "key": "dust",       "csvKey": "dust",       "label": "Indoor Dust / Airborne Particulates",    "weight": 1 }
           ]
         }
       ]
@@ -256,7 +275,6 @@
     {
       "id": "foods",
       "title": "Brain Threat Foods & Additives Assessment",
-      "note": "0–3 frequency × weight; larger weights for processed meats, sugar-sweetened beverages, etc.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -270,21 +288,15 @@
             { "label": "Regularly (daily) (3)", "value": 3 }
           ],
           "items": [
-            { "key": "processed_meats", "label": "Processed meats (nitrates/nitrites, deli meats, bacon, hot dogs)", "weight": 1.5 },
-            { "key": "fried_fast",      "label": "Fried/Fast foods",                                               "weight": 1.5 },
-            { "key": "sugary_drinks",   "label": "Sugar-sweetened beverages",                                      "weight": 1.5 },
-            { "key": "sweets_snacks",   "label": "Sweets, pastries, candy",                                        "weight": 1.0 },
-            { "key": "refined_grains",  "label": "Refined grains / white flour products",                           "weight": 0.5 },
-            { "key": "trans_fats",      "label": "Trans-fat or partially hydrogenated oils",                        "weight": 1.0 },
-            { "key": "msg",             "label": "Monosodium glutamate (MSG)",                                      "weight": 0.5 },
-            { "key": "artificial_flavors","label": "Artificial flavors/colors/sweeteners (diet sodas, candies)",   "weight": 0.5 },
-            { "key": "excess_salt",     "label": "Excess added salt/salty snacks",                                  "weight": 0.5 }
-          ],
-          "bandsPct": [
-            { "min": 0,  "max": 24, "label": "Low" },
-            { "min": 25, "max": 49, "label": "Moderate" },
-            { "min": 50, "max": 74, "label": "High" },
-            { "min": 75, "max": 100,"label": "Very High" }
+            { "key": "processed_meats", "csvKey": "processed_meats", "label": "Processed meats (nitrates/nitrites, deli meats, bacon, hot dogs)", "weight": 1.5 },
+            { "key": "fried_fast",      "csvKey": "fried_fast",      "label": "Fried/Fast foods",                                               "weight": 1.5 },
+            { "key": "sugary_drinks",   "csvKey": "sugary_drinks",   "label": "Sugar-sweetened beverages",                                      "weight": 1.5 },
+            { "key": "sweets_snacks",   "csvKey": "sweets_snacks",   "label": "Sweets, pastries, candy",                                        "weight": 1.0 },
+            { "key": "refined_grains",  "csvKey": "refined_grains",  "label": "Refined grains / white flour products",                           "weight": 0.5 },
+            { "key": "trans_fats",      "csvKey": "trans_fats",      "label": "Trans-fat or partially hydrogenated oils",                        "weight": 1.0 },
+            { "key": "msg",             "csvKey": "msg",             "label": "Monosodium glutamate (MSG)",                                      "weight": 0.5 },
+            { "key": "artificial_flavors","csvKey": "artificial_flavors","label": "Artificial flavors/colors/sweeteners",                       "weight": 0.5 },
+            { "key": "excess_salt",     "csvKey": "excess_salt",     "label": "Excess added salt/salty snacks",                                  "weight": 0.5 }
           ]
         }
       ]
@@ -293,7 +305,6 @@
     {
       "id": "toxins",
       "title": "Toxin Exposure Assessment",
-      "note": "0–3 frequency across five exposure domains; sum → tier as in WP.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -307,17 +318,11 @@
             { "label": "Frequently (wkly/daily) — 3","value": 3 }
           ],
           "items": [
-            { "key": "water",  "label": "Drinking / Tap Water (unfiltered/old pipes)",             "weight": 1 },
-            { "key": "metals", "label": "Heavy metals (food/environment)",                          "weight": 1 },
-            { "key": "pestic", "label": "Pesticides/Herbicides (home/garden/occupational)",         "weight": 1 },
-            { "key": "solv",   "label": "Solvents/VOCs (paints, cleaners, off-gassing, garages)",   "weight": 1 },
-            { "key": "mold",   "label": "Mold/moisture damage or poor ventilation",                 "weight": 1 }
-          ],
-          "bandsPct": [
-            { "min": 0,  "max": 24, "label": "Low" },
-            { "min": 25, "max": 49, "label": "Moderate" },
-            { "min": 50, "max": 74, "label": "High" },
-            { "min": 75, "max": 100,"label": "Very High" }
+            { "key": "water",  "csvKey": "water",  "label": "Drinking / Tap Water (unfiltered/old pipes)",           "weight": 1 },
+            { "key": "metals", "csvKey": "metals", "label": "Heavy metals (food/environment)",                        "weight": 1 },
+            { "key": "pestic", "csvKey": "pestic", "label": "Pesticides/Herbicides (home/garden/occupational)",       "weight": 1 },
+            { "key": "solv",   "csvKey": "solv",   "label": "Solvents/VOCs (paints, cleaners, off-gassing, garages)", "weight": 1 },
+            { "key": "mold",   "csvKey": "mold",   "label": "Mold/moisture damage or poor ventilation",               "weight": 1 }
           ]
         }
       ]
