@@ -1,16 +1,15 @@
 /* BrainPreserve — Brain Threat Analysis
    APP RENDERER (UI + data loading + state management)
-   - Reads config (JSON) + master CSV
+   - Loads config + CSV
    - Renders questionnaires (config-driven)
    - Tracks answers; computes scores; builds summaries
-   - Wires Copy and Clear buttons
+   - Wires Copy and Clear buttons (per-section + global) with guaranteed re-collapse
 */
 (function(){
   // -----------------------------
-  // Simple CSV parser (no external libs)
+  // CSV parser (no external libs)
   // -----------------------------
   function parseCSV(text){
-    // Handles commas inside quotes and double-quote escaping
     const rows = [];
     let i=0, field="", row=[], inQuotes=false;
     function pushField(){ row.push(field); field=""; }
@@ -20,9 +19,7 @@
       if (inQuotes){
         if (c === '"'){
           if (text[i] === '"'){ field += '"'; i++; } else { inQuotes = false; }
-        } else {
-          field += c;
-        }
+        } else { field += c; }
       } else {
         if (c === '"'){ inQuotes = true; }
         else if (c === ','){ pushField(); }
@@ -31,7 +28,6 @@
         else { field += c; }
       }
     }
-    // Last field/row
     if (field.length || row.length){ pushField(); pushRow(); }
 
     if (!rows.length) return [];
@@ -61,21 +57,17 @@
     if (!res.ok) throw new Error(`Failed to load ${url}`);
     return res.json();
   }
-
   async function loadText(url){
     const res = await fetch(url, { cache:"no-store" });
     if (!res.ok) throw new Error(`Failed to load ${url}`);
     return res.text();
   }
-
   async function loadData(){
-    // 1) instruments_config.json → window.BT_CONFIG
     const cfgUrl = (window.BT_CFG && window.BT_CFG.paths && window.BT_CFG.paths.instrumentsConfig) || "data/instruments_config.json";
     const formCfg = await loadJSON(cfgUrl);
     try { Object.defineProperty(window, "BT_CONFIG", { value: formCfg, writable:false, configurable:false }); }
     catch(e){ window.BT_CONFIG = formCfg; }
 
-    // 2) master.csv → parsed array
     const csvUrl = (window.BT_CFG && window.BT_CFG.paths && window.BT_CFG.paths.masterCSV) || "data/master.csv";
     const csvText = await loadText(csvUrl);
     const csvRows = parseCSV(csvText);
@@ -98,17 +90,11 @@
         stress: {},
         activity: {}
       },
-      social: {
-        lsns: {},  // 0..5
-        ucla: {}   // 1..3
-      },
-      sensory: {
-        hhies: {}, // 0|2|4
-        vfq7: {}   // 1..6
-      }
+      social: { lsns:{}, ucla:{} },
+      sensory:{ hhies:{}, vfq7:{} }
     },
     csv: [],
-    sections: [] // from config.sections
+    sections: []
   };
 
   // -----------------------------
@@ -119,11 +105,8 @@
     for (const [k,v] of Object.entries(attrs||{})){
       if (k === "class") node.className = v;
       else if (k === "html") node.innerHTML = v;
-      else if (k.startsWith("on") && typeof v === "function"){
-        node.addEventListener(k.substring(2), v);
-      } else if (v !== undefined && v !== null){
-        node.setAttribute(k, v);
-      }
+      else if (k.startsWith("on") && typeof v === "function"){ node.addEventListener(k.substring(2), v); }
+      else if (v !== undefined && v !== null){ node.setAttribute(k, v); }
     }
     for (const ch of children){
       if (ch === null || ch === undefined) continue;
@@ -132,11 +115,67 @@
     }
     return node;
   }
-
   function clearNode(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+  function caret(){ return el("span", { class:"bt-caret", "aria-hidden":"true" }, "▸"); }
+  function toNum(v){ const n = Number(v); return isNaN(n) ? null : n; }
 
-  function caret(){
-    return el("span", { class:"bt-caret", "aria-hidden":"true" }, "▸");
+  // -----------------------------
+  // Collapse helpers
+  // -----------------------------
+  function recollapseAll(){
+    document.querySelectorAll('details.bt-acc[open]').forEach(d => d.removeAttribute('open'));
+  }
+  function recollapseSection(sectionId){
+    const card = document.querySelector(`section[data-section="${sectionId}"]`);
+    if (!card) return;
+    card.querySelectorAll('details.bt-acc[open]').forEach(d => d.removeAttribute('open'));
+  }
+
+  // -----------------------------
+  // Section resets
+  // -----------------------------
+  function resetSectionState(sectionId){
+    if (sectionId === "personal"){
+      STATE.answers.personal = {
+        sex: null,
+        age: null,
+        units: "US",
+        height: { ft: null, in: null, m: null },
+        weight: { lb: null, kg: null },
+        history: {},
+        sleep: {},
+        stress: {},
+        activity: {}
+      };
+    } else if (sectionId === "social"){
+      STATE.answers.social = { lsns:{}, ucla:{} };
+    } else if (sectionId === "sensory"){
+      STATE.answers.sensory = { hhies:{}, vfq7:{} };
+    }
+  }
+  function resetSectionUI(sectionId){
+    const card = document.querySelector(`section[data-section="${sectionId}"]`);
+    if (!card) return;
+    card.querySelectorAll('input[type="radio"], input[type="number"], select').forEach(el=>{
+      if (el.type === "radio") el.checked = false;
+      else if (el.tagName === "SELECT") el.selectedIndex = 0;
+      else el.value = "";
+    });
+    // For Personal, restore US layout visibility
+    if (sectionId === "personal"){
+      const unitsSel = card.querySelector("#dem-units");
+      const heightUS = card.querySelector("#height-us");
+      const weightUS = card.querySelector("#weight-us");
+      const heightM  = card.querySelector("#height-m");
+      const weightKG = card.querySelector("#weight-kg");
+      if (unitsSel){ unitsSel.value = "US"; }
+      if (heightUS) heightUS.style.display = "";
+      if (weightUS) weightUS.style.display = "";
+      if (heightM)  heightM.style.display = "none";
+      if (weightKG) weightKG.style.display = "none";
+    }
+    // Re-collapse after clearing
+    recollapseSection(sectionId);
   }
 
   // -----------------------------
@@ -152,7 +191,6 @@
         return o;
       })
     );
-
     const ageInput = el("input", { type:"number", min:"18", max:"120", id:"dem-age", placeholder:"Age", "aria-label":"Age" });
     if (typeof a.age === "number") ageInput.value = String(a.age);
 
@@ -214,14 +252,12 @@
     ));
   }
 
-  function render_yn_group(sub, mount, targetObj, yesKey, noKey){
-    // yesKey/noKey describe which tier applies; we store "Yes"/"No"
+  function render_yn_group(sub, mount, targetObj){
     const grid = el("div", { class:"bt-grid" });
     (sub.items||[]).forEach(item => {
       const name = `${sub.id}__${item.id}`;
       const yes = el("input", { type:"radio", name, value:"Yes", id:`${name}_y` });
       const no  = el("input", { type:"radio", name, value:"No",  id:`${name}_n` });
-      // restore state
       if (targetObj[item.id] === "Yes") yes.checked = true;
       if (targetObj[item.id] === "No")  no.checked  = true;
       yes.addEventListener("change", () => { targetObj[item.id] = "Yes"; onChange(); });
@@ -243,10 +279,7 @@
 
   function render_likert_group(sub, mount, targetObj){
     const scale = (window.BT_CONFIG.scales && window.BT_CONFIG.scales[sub.scale_ref]) || [];
-    if (!scale.length) {
-      mount.appendChild(el("div", { class:"bt-help" }, "Scale config missing."));
-      return;
-    }
+    if (!scale.length) { mount.appendChild(el("div", { class:"bt-help" }, "Scale config missing.")); return; }
     const grid = el("div", { class:"bt-grid" });
     (sub.items||[]).forEach(item => {
       const name = `${sub.id}__${item.id}`;
@@ -267,12 +300,10 @@
   }
 
   function render_radio_group(sub, mount, targetObj){
-    // LSNS/UCLA/HHIE/VFQ
     const grid = el("div", { class:"bt-grid" });
     (sub.items||[]).forEach(item => {
       const name = `${sub.id}__${item.id}`;
       const row = el("div", { class:"bt-row" }, el("div", { class:"bt-note" }, item.label));
-      // Options may be via options_ref or inline options
       const opts = sub.options_ref
         ? (window.BT_CONFIG.scales && window.BT_CONFIG.scales[sub.options_ref]) || []
         : (sub.options || []);
@@ -296,45 +327,45 @@
   }
 
   // -----------------------------
-  // Section renderer from config
+  // Section renderer (adds per-section Clear button)
   // -----------------------------
   function renderSection(section){
     const mount = document.querySelector(`[data-mount="${section.id}"]`);
-    if (!mount) return;
+    const card  = document.querySelector(`section[data-section="${section.id}"]`);
+    if (!mount || !card) return;
 
-    clearNode(mount);
-
-    // Remove "Loading…" placeholder if present
+    // Remove any “Loading…” line
     const loadDiv = document.getElementById(`${section.id}-loading`);
     if (loadDiv) loadDiv.remove();
 
+    clearNode(mount);
+
     (section.subsections||[]).forEach(sub => {
       const wrapper = el("details", { class:"bt-acc", open: !window.BT_CFG?.app?.startCollapsed });
-      const sum = el("summary", {}, caret(), " ", sub.id === "demographics" ? "Demographics" :
-                                   sub.id === "history_yesno" ? "Medical History & Lifestyle" :
-                                   sub.id === "sleep" ? "Sleep" :
-                                   sub.id === "stress" ? "Perceived Stress" :
-                                   sub.id === "activity_yesno" ? "Physical Activity" :
-                                   sub.id === "lsns6" ? "LSNS-6 (Social Network)" :
-                                   sub.id === "ucla3" ? "UCLA-3 (Loneliness)" :
-                                   sub.id === "hhies" ? "HHIE-S (Hearing)" :
-                                   sub.id === "vfq7" ? "VFQ-3of7 (Vision)" : sub.id);
+      const sum = el("summary", {}, caret(), " ",
+        sub.id === "demographics"     ? "Demographics" :
+        sub.id === "history_yesno"    ? "Medical History & Lifestyle" :
+        sub.id === "sleep"            ? "Sleep" :
+        sub.id === "stress"           ? "Perceived Stress" :
+        sub.id === "activity_yesno"   ? "Physical Activity" :
+        sub.id === "lsns6"            ? "LSNS-6 (Social Network)" :
+        sub.id === "ucla3"            ? "UCLA-3 (Loneliness)" :
+        sub.id === "hhies"            ? "HHIE-S (Hearing)" :
+        sub.id === "vfq7"             ? "VFQ-3of7 (Vision)" : sub.id
+      );
       wrapper.appendChild(sum);
 
       const inner = el("div", { style:"padding:10px;" });
-
       if (section.id === "personal"){
         if (sub.type === "demographics")       render_demographics(sub, inner);
-        else if (sub.type === "yn_group" && sub.id==="history_yesno")  render_yn_group(sub, inner, STATE.answers.personal.history, "yesTier", null);
-        else if (sub.type === "likert_group" && sub.id==="sleep")      render_likert_group(sub, inner, STATE.answers.personal.sleep);
-        else if (sub.type === "likert_group" && sub.id==="stress")     render_likert_group(sub, inner, STATE.answers.personal.stress);
-        else if (sub.type === "yn_group" && sub.id==="activity_yesno") render_yn_group(sub, inner, STATE.answers.personal.activity, null, "noTier");
-      }
-      else if (section.id === "social"){
+        else if (sub.type === "yn_group"   && sub.id==="history_yesno")  render_yn_group(sub, inner, STATE.answers.personal.history);
+        else if (sub.type === "likert_group" && sub.id==="sleep")        render_likert_group(sub, inner, STATE.answers.personal.sleep);
+        else if (sub.type === "likert_group" && sub.id==="stress")       render_likert_group(sub, inner, STATE.answers.personal.stress);
+        else if (sub.type === "yn_group"   && sub.id==="activity_yesno") render_yn_group(sub, inner, STATE.answers.personal.activity);
+      } else if (section.id === "social"){
         if (sub.id === "lsns6") render_radio_group(sub, inner, STATE.answers.social.lsns);
         if (sub.id === "ucla3") render_radio_group(sub, inner, STATE.answers.social.ucla);
-      }
-      else if (section.id === "sensory"){
+      } else if (section.id === "sensory"){
         if (sub.id === "hhies") render_radio_group(sub, inner, STATE.answers.sensory.hhies);
         if (sub.id === "vfq7")  render_radio_group(sub, inner, STATE.answers.sensory.vfq7);
       }
@@ -342,6 +373,20 @@
       wrapper.appendChild(inner);
       mount.appendChild(wrapper);
     });
+
+    // Add per-section Clear button (appears once per category card)
+    const btnRow = el("div", { class:"bt-row", style:"margin-top:10px" },
+      el("button", {
+        type:"button",
+        class:"bt-btn secondary",
+        onClick: () => {
+          resetSectionState(section.id);
+          resetSectionUI(section.id);
+          onChange(); // refresh summary after clear
+        }
+      }, "Clear This Section")
+    );
+    mount.appendChild(btnRow);
   }
 
   // -----------------------------
@@ -354,100 +399,86 @@
       results.push(window.BT_Scoring.computePersonal(STATE.answers.personal));
       results.push(window.BT_Scoring.computeSocial(STATE.answers.social));
       results.push(window.BT_Scoring.computeSensory(STATE.answers.sensory));
-    } catch(err){
-      console.error("Scoring error:", err);
-    }
+    } catch(err){ console.error("Scoring error:", err); }
     const overall = window.BT_Scoring.combineSections(results);
     return { sections: results, overall };
   }
-
   function buildSummaries(secResults){
     if (!window.BT_Summary) return { per:{}, overall:"Summary unavailable." };
     const per = window.BT_Summary.buildSectionSummaries(secResults, STATE.csv);
     const overall = window.BT_Summary.buildOverallSummary(secResults);
     return { per, overall };
   }
-
   function renderSummaryBox(text){
     const box = document.getElementById("bt-summary-text");
     if (!box) return;
     box.textContent = text || (window.BT_CFG?.copy?.summaryEmpty || "Complete the sections to see a personalized summary here.");
   }
-
   function onChange(){
-    const { sections, overall } = computeAll();
+    const { sections } = computeAll();
     const { per, overall: overallTxt } = buildSummaries(sections);
-    // Compose a single combined narrative: per-section blocks + overall
     const combined = [
-      per.personal || "",
-      "",
-      per.social || "",
-      "",
-      per.sensory || "",
-      "",
-      overallTxt || ""
+      per.personal || "", "", per.social || "", "", per.sensory || "", "", overallTxt || ""
     ].join("\n");
     renderSummaryBox(combined.trim());
   }
 
   // -----------------------------
-  // Buttons: Copy + Clear
+  // Buttons: Copy + Global Clear
   // -----------------------------
   function wireButtons(){
-    const copyBtn = document.getElementById("bt-copy");
+    const copyBtn  = document.getElementById("bt-copy");
     const resetBtn = document.getElementById("bt-reset");
 
     if (copyBtn){
       copyBtn.addEventListener("click", async () => {
         const box = document.getElementById("bt-summary-text");
         const txt = box ? box.textContent || "" : "";
-        try {
-          await navigator.clipboard.writeText(txt);
-          copyBtn.textContent = "Copied";
-          setTimeout(()=> copyBtn.textContent = "Copy Summary", 1200);
-        } catch {
-          copyBtn.textContent = "Copy failed";
-          setTimeout(()=> copyBtn.textContent = "Copy Summary", 1500);
-        }
+        try { await navigator.clipboard.writeText(txt); copyBtn.textContent="Copied"; setTimeout(()=>copyBtn.textContent="Copy Summary", 1200); }
+        catch { copyBtn.textContent="Copy failed"; setTimeout(()=>copyBtn.textContent="Copy Summary", 1500); }
       });
     }
 
     if (resetBtn){
       resetBtn.addEventListener("click", () => {
-        // Reset state
+        // Reset ALL state
         STATE.answers = {
           personal: {
-            sex: null,
-            age: null,
-            units: "US",
-            height: { ft: null, in: null, m: null },
-            weight: { lb: null, kg: null },
-            history: {},
-            sleep: {},
-            stress: {},
-            activity: {}
+            sex: null, age: null, units: "US",
+            height:{ ft:null, in:null, m:null }, weight:{ lb:null, kg:null },
+            history:{}, sleep:{}, stress:{}, activity:{}
           },
           social: { lsns:{}, ucla:{} },
           sensory:{ hhies:{}, vfq7:{} }
         };
-        // Reset UI inputs
+        // Reset ALL inputs
         document.querySelectorAll('input[type="radio"], input[type="number"], select').forEach(el=>{
           if (el.type === "radio") el.checked = false;
           else if (el.tagName === "SELECT") el.selectedIndex = 0;
           else el.value = "";
         });
-        // Re-sync units layout after reset
-        const unitsSel = document.getElementById("dem-units");
-        if (unitsSel){ unitsSel.value = "US"; unitsSel.dispatchEvent(new Event("change")); }
+        // Restore US layout visibility in Personal card
+        const pCard = document.querySelector('section[data-section="personal"]');
+        if (pCard){
+          const unitsSel = pCard.querySelector("#dem-units");
+          const heightUS = pCard.querySelector("#height-us");
+          const weightUS = pCard.querySelector("#weight-us");
+          const heightM  = pCard.querySelector("#height-m");
+          const weightKG = pCard.querySelector("#weight-kg");
+          if (unitsSel) unitsSel.value = "US";
+          if (heightUS) heightUS.style.display = "";
+          if (weightUS) weightUS.style.display = "";
+          if (heightM)  heightM.style.display = "none";
+          if (weightKG) weightKG.style.display = "none";
+        }
+        // RE-COLLAPSE ALL CATEGORIES (critical requirement)
+        recollapseAll();
+
+        // Reset summary text
         renderSummaryBox((window.BT_CFG?.copy?.summaryEmpty) || "Complete the sections to see a personalized summary here.");
       });
     }
   }
-
-  // -----------------------------
-  // Utilities
-  // -----------------------------
-  function toNum(v){ const n = Number(v); return isNaN(n) ? null : n; }
 
   // -----------------------------
   // Boot
@@ -458,7 +489,7 @@
       STATE.sections = formCfg.sections || [];
       STATE.csv = csvRows || [];
 
-      // Render each declared section
+      // Render each declared section card
       for (const section of STATE.sections){
         renderSection(section);
       }
@@ -469,15 +500,15 @@
       // Wire buttons
       wireButtons();
 
+      // Ensure everything starts collapsed if configured
+      if (window.BT_CFG?.app?.startCollapsed) recollapseAll();
+
     } catch(err){
       console.error(err);
       renderSummaryBox("Failed to load configuration or data. Please check your repository paths.");
     }
   }
 
-  if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
+  if (document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", boot); }
+  else { boot(); }
 })();
