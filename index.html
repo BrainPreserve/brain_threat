@@ -5,22 +5,31 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BrainPreserve — Brain Threat Analysis (Standalone)</title>
   <meta name="description" content="Structured, evidence-informed brain threat assessment with clear scoring and summaries." />
-  <link rel="stylesheet" href="assets/ui.css?v=4" />
+  <link rel="stylesheet" href="assets/ui.css?v=5" />
   <style>
     body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; color:#0f172a; background:#f8fafc; }
     .bt-container { max-width: 1100px; margin: 24px auto; padding: 0 12px; }
+
     /* Card-like details for categories */
     details.bt-cat { background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); padding:0; }
-    details.bt-cat summary { list-style:none; cursor:pointer; padding:16px; font-weight:800; font-size:1.2rem; border-radius:14px; }
-    details.bt-cat[open] summary { border-bottom:1px solid #e5e7eb; }
+    details.bt-cat summary { list-style:none; cursor:pointer; padding:16px; font-weight:800; font-size:1.2rem; border-radius:14px; display:flex; align-items:center; gap:8px; }
     details.bt-cat summary::-webkit-details-marker { display:none; }
+    details.bt-cat[open] summary { border-bottom:1px solid #e5e7eb; }
     .bt-card-body { padding:16px; }
+
+    /* Caret styling for BOTH category and questionnaire accordions */
+    .bt-caret { display:inline-block; transform: rotate(0deg); transition: transform .18s ease; user-select:none; }
+    details[open] > summary .bt-caret { transform: rotate(90deg); }
+
     .bt-sub { color:#475569; margin:0 0 12px; }
     .bt-nav { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
     .bt-nav a { text-decoration:none; padding:8px 12px; border:1px solid #e5e7eb; border-radius:9999px; background:#fff; color:#0f172a; font-weight:600; }
     .bt-footer { color:#64748b; font-size:.9rem; margin:18px 0 0; }
     .bt-muted { color:#64748b; }
     .bt-space { height: 10px; }
+
+    /* Optional: better keyboard focus ring on summaries */
+    details.bt-cat summary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; border-radius: 12px; }
   </style>
 </head>
 <body>
@@ -40,7 +49,7 @@
   <main class="bt-container" id="app-root" aria-live="polite">
     <!-- Personal -->
     <details class="bt-cat" data-section="personal" id="section-personal">
-      <summary>Personal Assessment</summary>
+      <summary><span class="bt-caret" aria-hidden="true">▸</span> Personal Assessment</summary>
       <div class="bt-card-body">
         <div class="bt-muted" id="personal-loading">Loading questions…</div>
         <div data-mount="personal"></div>
@@ -51,7 +60,7 @@
 
     <!-- Social & Loneliness -->
     <details class="bt-cat" data-section="social" id="section-social">
-      <summary>Social & Loneliness</summary>
+      <summary><span class="bt-caret" aria-hidden="true">▸</span> Social & Loneliness</summary>
       <div class="bt-card-body">
         <div class="bt-muted" id="social-loading">Loading questions…</div>
         <div data-mount="social"></div>
@@ -62,7 +71,7 @@
 
     <!-- Sensory -->
     <details class="bt-cat" data-section="sensory" id="section-sensory">
-      <summary>Sensory (Hearing • Vision)</summary>
+      <summary><span class="bt-caret" aria-hidden="true">▸</span> Sensory (Hearing • Vision)</summary>
       <div class="bt-card-body">
         <div class="bt-muted" id="sensory-loading">Loading questions…</div>
         <div data-mount="sensory"></div>
@@ -88,9 +97,9 @@
   </noscript>
 
   <!-- Cache-busted scripts -->
-  <script src="assets/config.js?v=4"></script>
-  <script src="assets/scoring.js?v=4"></script>
-  <script src="assets/summary.js?v=4"></script>
-  <script src="assets/app.js?v=4"></script>
+  <script src="assets/config.js?v=5"></script>
+  <script src="assets/scoring.js?v=5"></script>
+  <script src="assets/summary.js?v=5"></script>
+  <script src="assets/app.js?v=5"></script>
 </body>
 </html>
