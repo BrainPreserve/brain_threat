@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BrainPreserve — Brain Threat Analysis (Standalone)</title>
+  <meta name="description" content="Structured, evidence-informed brain threat assessment with clear scoring and summaries." />
+  <!-- UI styles -->
+  <link rel="stylesheet" href="assets/ui.css" />
+  <style>
+    /* Safe inline styles that help while assets/ui.css loads */
+    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; color:#0f172a; background:#f8fafc; }
+    .bt-container { max-width: 1100px; margin: 24px auto; padding: 0 12px; }
+    .bt-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); padding:16px; }
+    .bt-h1 { font-size:1.35rem; font-weight:800; margin:0 0 4px; }
+    .bt-sub { color:#475569; margin:0 0 12px; }
+    .bt-pill { display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:.85rem; }
+    .bt-nav { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
+    .bt-nav a { text-decoration:none; padding:8px 12px; border:1px solid #e5e7eb; border-radius:9999px; background:#fff; color:#0f172a; font-weight:600; }
+    .bt-footer { color:#64748b; font-size:.9rem; margin:18px 0 0; }
+    .bt-muted { color:#64748b; }
+    .bt-space { height: 10px; }
+  </style>
+</head>
+<body>
+  <header class="bt-container">
+    <div class="bt-card">
+      <div class="bt-h1">BrainPreserve — Brain Threat Analysis</div>
+      <p class="bt-sub">Config-driven questionnaires with validated scoring and deterministic, “GPT-like” summaries — no external services required.</p>
+      <div class="bt-nav">
+        <a href="#section-personal">Personal</a>
+        <a href="#section-social">Social & Loneliness</a>
+        <a href="#section-sensory">Sensory</a>
+        <a href="#section-summary">Summary</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="bt-container" id="app-root" aria-live="polite">
+    <!-- The app.js file builds each section into these anchors, using data/instruments_config.json -->
+    <section id="section-personal" class="bt-card" data-section="personal">
+      <h2>Personal Assessment</h2>
+      <div class="bt-muted" id="personal-loading">Loading questions…</div>
+      <div data-mount="personal"></div>
+    </section>
+
+    <div class="bt-space"></div>
+
+    <section id="section-social" class="bt-card" data-section="social">
+      <h2>Social & Loneliness</h2>
+      <div class="bt-muted" id="social-loading">Loading questions…</div>
+      <div data-mount="social"></div>
+    </section>
+
+    <div class="bt-space"></div>
+
+    <section id="section-sensory" class="bt-card" data-section="sensory">
+      <h2>Sensory (Hearing • Vision)</h2>
+      <div class="bt-muted" id="sensory-loading">Loading questions…</div>
+      <div data-mount="sensory"></div>
+    </section>
+
+    <div class="bt-space"></div>
+
+    <section id="section-summary" class="bt-card">
+      <h2>Comprehensive Client Summary</h2>
+      <div id="bt-summary-text" class="bt-summary">Complete the sections to see a personalized summary here.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button id="bt-copy" type="button">Copy Summary</button>
+        <button id="bt-reset" type="button">Clear Form</button>
+      </div>
+      <p class="bt-footer">This tool summarizes screening results for coaching and referral guidance; it does not diagnose disease.</p>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="bt-container">
+      <div class="bt-card">JavaScript is required to load the assessment.</div>
+    </div>
+  </noscript>
+
+  <!-- App scripts (added in this order) -->
+  <script src="assets/config.js"></script>
+  <script src="assets/scoring.js"></script>
+  <script src="assets/summary.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
