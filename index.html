@@ -1,105 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BrainPreserve — Brain Threat Analysis (Standalone)</title>
-  <meta name="description" content="Structured, evidence-informed brain threat assessment with clear scoring and summaries." />
-  <link rel="stylesheet" href="assets/ui.css?v=5" />
+  <meta charset="utf-8">
+  <title>BrainPreserve — Brain Threat Analysis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; color:#0f172a; background:#f8fafc; }
-    .bt-container { max-width: 1100px; margin: 24px auto; padding: 0 12px; }
-
-    /* Card-like details for categories */
-    details.bt-cat { background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); padding:0; }
-    details.bt-cat summary { list-style:none; cursor:pointer; padding:16px; font-weight:800; font-size:1.2rem; border-radius:14px; display:flex; align-items:center; gap:8px; }
-    details.bt-cat summary::-webkit-details-marker { display:none; }
-    details.bt-cat[open] summary { border-bottom:1px solid #e5e7eb; }
-    .bt-card-body { padding:16px; }
-
-    /* Caret styling for BOTH category and questionnaire accordions */
-    .bt-caret { display:inline-block; transform: rotate(0deg); transition: transform .18s ease; user-select:none; }
-    details[open] > summary .bt-caret { transform: rotate(90deg); }
-
-    .bt-sub { color:#475569; margin:0 0 12px; }
-    .bt-nav { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
-    .bt-nav a { text-decoration:none; padding:8px 12px; border:1px solid #e5e7eb; border-radius:9999px; background:#fff; color:#0f172a; font-weight:600; }
-    .bt-footer { color:#64748b; font-size:.9rem; margin:18px 0 0; }
-    .bt-muted { color:#64748b; }
-    .bt-space { height: 10px; }
-
-    /* Optional: better keyboard focus ring on summaries */
-    details.bt-cat summary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; border-radius: 12px; }
+    body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;background:#f6f7fb;color:#0f172a}
+    .container{max-width:1000px;margin:28px auto;padding:0 16px}
+    h1{font-size:28px;margin:0 0 6px}
+    .muted{color:#64748b}
+    .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+    .bt-topnav .bt-pill{border:1px solid #e5e7eb;background:#fff;padding:8px 14px;border-radius:999px;font-weight:600;cursor:pointer}
+    details.bt-cat{border:1px solid #e5e7eb;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.04);margin:12px 0}
+    details.bt-cat>summary{list-style:none;display:flex;gap:8px;align-items:center;padding:12px 14px;cursor:pointer;font-weight:700}
+    details.bt-cat>summary::-webkit-details-marker{display:none}
+    .bt-caret{display:inline-block;width:1em;text-align:center}
+    .bt-body{padding:12px 14px}
+    .summary-card{margin:16px 0;padding:16px;background:#fff;border:1px dashed #e5e7eb;border-radius:12px}
+    .btns{display:flex;gap:10px;margin-top:10px}
+    .btn{background:#2563eb;color:#fff;border:none;border-radius:999px;padding:10px 14px;font-weight:600;cursor:pointer}
+    .btn.secondary{background:#111827}
   </style>
 </head>
 <body>
-  <header class="bt-container">
-    <div class="bt-cat" style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:16px;">
-      <div style="font-size:1.35rem;font-weight:800;margin:0 0 4px;">BrainPreserve — Brain Threat Analysis</div>
-      <p class="bt-sub">Config-driven questionnaires with validated scoring and deterministic, “GPT-like” summaries — no external services required.</p>
-      <div class="bt-nav">
-        <a href="#section-personal">Personal</a>
-        <a href="#section-social">Social & Loneliness</a>
-        <a href="#section-sensory">Sensory</a>
-        <a href="#section-summary">Summary</a>
+  <div class="container">
+    <h1>BrainPreserve — Brain Threat Analysis</h1>
+    <div class="muted">Config-driven questionnaires with validated scoring and deterministic, “GPT-like” summaries — no external services.</div>
+
+    <!-- DYNAMIC NAV PILLS WILL BE INSERTED HERE -->
+    <div id="bt-topnav" class="bt-topnav pillbar"></div>
+
+    <!-- DYNAMIC CATEGORIES WILL BE INSERTED HERE -->
+    <div id="bt-categories"></div>
+
+    <!-- SUMMARY (kept visible; global Copy & Clear wired by your scripts) -->
+    <div class="summary-card" data-role="summary-card">
+      <div style="font-weight:700;margin-bottom:8px">Comprehensive Client Summary</div>
+      <div class="muted" data-out="summary-text">Complete the sections to see a personalized summary here.</div>
+      <div class="btns">
+        <button class="btn" data-action="copy">Copy Summary</button>
+        <button class="btn secondary" data-action="reset">Clear Form</button>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="bt-container" id="app-root" aria-live="polite">
-    <!-- Personal -->
-    <details class="bt-cat" data-section="personal" id="section-personal">
-      <summary><span class="bt-caret" aria-hidden="true">▸</span> Personal Assessment</summary>
-      <div class="bt-card-body">
-        <div class="bt-muted" id="personal-loading">Loading questions…</div>
-        <div data-mount="personal"></div>
-      </div>
-    </details>
-
-    <div class="bt-space"></div>
-
-    <!-- Social & Loneliness -->
-    <details class="bt-cat" data-section="social" id="section-social">
-      <summary><span class="bt-caret" aria-hidden="true">▸</span> Social & Loneliness</summary>
-      <div class="bt-card-body">
-        <div class="bt-muted" id="social-loading">Loading questions…</div>
-        <div data-mount="social"></div>
-      </div>
-    </details>
-
-    <div class="bt-space"></div>
-
-    <!-- Sensory -->
-    <details class="bt-cat" data-section="sensory" id="section-sensory">
-      <summary><span class="bt-caret" aria-hidden="true">▸</span> Sensory (Hearing • Vision)</summary>
-      <div class="bt-card-body">
-        <div class="bt-muted" id="sensory-loading">Loading questions…</div>
-        <div data-mount="sensory"></div>
-      </div>
-    </details>
-
-    <div class="bt-space"></div>
-
-    <!-- Summary (not collapsible) -->
-    <section id="section-summary" class="bt-cat" style="padding:16px;">
-      <h2 style="margin:0 0 8px;font-size:1.2rem;">Comprehensive Client Summary</h2>
-      <div id="bt-summary-text" class="bt-summary">Complete the sections to see a personalized summary here.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-        <button id="bt-copy" type="button">Copy Summary</button>
-        <button id="bt-reset" type="button">Clear Form</button>
-      </div>
-      <p class="bt-footer">This tool summarizes screening results for coaching and referral guidance; it does not diagnose disease.</p>
-    </section>
-  </main>
-
-  <noscript>
-    <div class="bt-container"><div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:16px;">JavaScript is required to load the assessment.</div></div>
-  </noscript>
-
-  <!-- Cache-busted scripts -->
-  <script src="assets/config.js?v=5"></script>
-  <script src="assets/scoring.js?v=5"></script>
-  <script src="assets/summary.js?v=5"></script>
-  <script src="assets/app.js?v=5"></script>
+  <!-- Load in this order -->
+  <script src="assets/config.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/scoring.js"></script>
+  <script src="assets/summary.js"></script>
 </body>
 </html>
