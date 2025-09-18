@@ -1,346 +1,460 @@
-/* BrainPreserve — Brain Threat Analysis
-   APP RENDERER (UI + data loading + state management)
-   - Renders config-driven questionnaires
-   - Guarantees: ALL category cards and ALL questionnaires start collapsed
-   - Per-section and global clear both recollapse
+/* BrainPreserve — Brain Threat Analysis (Option B)
+   Dynamic category renderer (no whitelist) + per-category clearing + collapsed carets.
+   Supports instrument types: demographics, bmi, yn_list, likert, radio, weighted_select, medications.
+   Relies on assets/config.js for paths: CFG.paths.configJson and CFG.paths.masterCsv (CSV not used here directly).
 */
-(function(){
-  // ---------- CSV parser ----------
-  function parseCSV(text){
-    const rows = []; let i=0, field="", row=[], inQuotes=false;
-    function pushField(){ row.push(field); field=""; }
-    function pushRow(){ rows.push(row); row=[]; }
-    while (i<text.length){
-      const c = text[i++]; if (inQuotes){
-        if (c === '"'){ if (text[i] === '"'){ field += '"'; i++; } else { inQuotes=false; } }
-        else { field += c; }
-      } else {
-        if (c === '"') inQuotes=true;
-        else if (c === ',') pushField();
-        else if (c === '\n'){ pushField(); pushRow(); }
-        else if (c !== '\r') field += c;
-      }
-    }
-    if (field.length || row.length){ pushField(); pushRow(); }
-    if (!rows.length) return [];
-    const header = rows[0].map(h => String(h||"").trim()); const out=[];
-    for (let r=1; r<rows.length; r++){
-      const obj={}; const cells=rows[r]; if (!cells || !cells.length) continue; let empty=true;
-      for (let c=0;c<header.length;c++){ const key=header[c]||`col_${c}`; const val=(cells[c]!=null)?String(cells[c]).trim():""; if (val!=="") empty=false; obj[key]=val; }
-      if (!empty) out.push(obj);
-    }
-    return out;
+(function () {
+  'use strict';
+
+  // ---------------------------
+  // CONFIG (read from assets/config.js)
+  // ---------------------------
+  if (!window.CFG || !CFG.paths || !CFG.paths.configJson) {
+    console.error('CFG.paths.configJson is missing. Ensure assets/config.js sets CFG.paths.configJson.');
+    return;
   }
 
-  // ---------- Loaders ----------
-  async function loadJSON(url){ const res=await fetch(url,{cache:"no-store"}); if(!res.ok) throw new Error(`Failed to load ${url}`); return res.json(); }
-  async function loadText(url){ const res=await fetch(url,{cache:"no-store"}); if(!res.ok) throw new Error(`Failed to load ${url}`); return res.text(); }
-  async function loadData(){
-    const cfgUrl = (window.BT_CFG?.paths?.instrumentsConfig) || "data/instruments_config.json";
-    const formCfg = await loadJSON(cfgUrl);
-    try { Object.defineProperty(window,"BT_CONFIG",{value:formCfg,writable:false,configurable:false}); } catch(e){ window.BT_CONFIG=formCfg; }
-    const csvUrl = (window.BT_CFG?.paths?.masterCSV) || "data/master.csv";
-    const csvRows = parseCSV(await loadText(csvUrl));
-    return { formCfg, csvRows };
-  }
-
-  // ---------- State ----------
-  const STATE = {
-    answers: {
-      personal:{ sex:null, age:null, units:"US", height:{ft:null,in:null,m:null}, weight:{lb:null,kg:null}, history:{}, sleep:{}, stress:{}, activity:{} },
-      social:{ lsns:{}, ucla:{} },
-      sensory:{ hhies:{}, vfq7:{} }
-    },
-    csv:[], sections:[]
+  // Basic helpers
+  const $ = (sel, el) => (el || document).querySelector(sel);
+  const $all = (sel, el) => Array.from((el || document).querySelectorAll(sel));
+  const el = (tag, attrs = {}, html = '') => {
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === 'class') n.className = v;
+      else if (k === 'dataset') Object.assign(n.dataset, v);
+      else if (k === 'style' && typeof v === 'object') Object.assign(n.style, v);
+      else n.setAttribute(k, v);
+    });
+    if (html) n.innerHTML = html;
+    return n;
   };
 
-  // ---------- Helpers ----------
-  function el(tag, attrs={}, ...children){
-    const node=document.createElement(tag);
-    for (const [k,v] of Object.entries(attrs)){
-      if (k==="class") node.className=v;
-      else if (k==="html") node.innerHTML=v;
-      else if (k.startsWith("on") && typeof v==="function") node.addEventListener(k.substring(2), v);
-      else if (v!=null) node.setAttribute(k,v);
+  // Carets
+  const CARET_CLOSED = (window.BP_UI && BP_UI.caretClosed) || '▸';
+  const CARET_OPEN   = (window.BP_UI && BP_UI.caretOpen)   || '▾';
+
+  // Collapse everything at startup
+  function collapseAllCats(root) {
+    $all('details.bt-cat', root).forEach(d => d.removeAttribute('open'));
+  }
+
+  // Reset inputs inside a container
+  function resetInputs(scope) {
+    $all('input[type=radio], input[type=checkbox]', scope).forEach(i => (i.checked = false));
+    $all('input[type=number], input[type=text]', scope).forEach(i => (i.value = ''));
+    $all('select', scope).forEach(s => (s.value = ''));
+  }
+
+  // Emit section update (summary.js listens)
+  function emitSectionUpdate(id, label, scoreObj) {
+    try {
+      window.dispatchEvent(new CustomEvent('bt:sectionUpdate', { detail: { id, label, ...(scoreObj || {}) } }));
+    } catch (e) {
+      // no-op
     }
-    for (const ch of children){ if (ch==null) continue; node.appendChild(typeof ch==="string"?document.createTextNode(ch):ch); }
-    return node;
-  }
-  function clearNode(n){ while(n.firstChild) n.removeChild(n.firstChild); }
-  function caret(){ return el("span",{class:"bt-caret","aria-hidden":"true"},"▸"); }
-  function toNum(v){ const n=Number(v); return isNaN(n)?null:n; }
-
-  // ---------- Collapse controls ----------
-  function recollapseAll(){
-    document.querySelectorAll('details.bt-cat, details.bt-acc').forEach(d => d.removeAttribute('open'));
-  }
-  function recollapseSection(sectionId){
-    const card = document.querySelector(`details.bt-cat[data-section="${sectionId}"]`);
-    if (card) card.removeAttribute('open');
-    card?.querySelectorAll('details.bt-acc').forEach(d => d.removeAttribute('open'));
-  }
-  function hardCollapseAll(){
-    recollapseAll();
-    requestAnimationFrame(recollapseAll);
-    setTimeout(recollapseAll, 0);
-    setTimeout(recollapseAll, 50);
   }
 
-  // ---------- Renderers ----------
-  function render_demographics(sub, mount){
-    const a=STATE.answers.personal;
-    const sexSel = el("select",{id:"dem-sex","aria-label":"Sex"},
-      ...["","Female","Male","Other/Prefer not to say"].map(v=>{const o=el("option",{value:v},v===""?"Select…":v); if(a.sex===v) o.selected=true; return o;})
-    );
-    const ageInput = el("input",{type:"number",min:"18",max:"120",id:"dem-age",placeholder:"Age","aria-label":"Age"});
-    if (typeof a.age==="number") ageInput.value=String(a.age);
-    const unitsSel = el("select",{id:"dem-units","aria-label":"Units"},
-      el("option",{value:"US"},"US (ft/in, lb)"),
-      el("option",{value:"Metric"},"Metric (m, kg)")
-    ); unitsSel.value=a.units||"US";
-    const heightUS = el("div",{class:"bt-row",id:"height-us"}, el("input",{type:"number",min:"0",id:"h-ft",placeholder:"Height (ft)"}), el("input",{type:"number",min:"0",id:"h-in",placeholder:"Height (in)"}));
-    if (a.height.ft!=null) heightUS.querySelector("#h-ft").value=String(a.height.ft);
-    if (a.height.in!=null) heightUS.querySelector("#h-in").value=String(a.height.in);
-    const heightM  = el("div",{class:"bt-row",id:"height-m",style:"display:none"}, el("input",{type:"number",step:"0.01",min:"0",id:"h-m",placeholder:"Height (m)"}));
-    if (a.height.m!=null) heightM.querySelector("#h-m").value=String(a.height.m);
-    const weightUS = el("div",{class:"bt-row",id:"weight-us"}, el("input",{type:"number",min:"0",id:"w-lb",placeholder:"Weight (lb)"}));
-    if (a.weight.lb!=null) weightUS.querySelector("#w-lb").value=String(a.weight.lb);
-    const weightKG = el("div",{class:"bt-row",id:"weight-kg",style:"display:none"}, el("input",{type:"number",step:"0.1",min:"0",id:"w-kg",placeholder:"Weight (kg)"}));
-    if (a.weight.kg!=null) weightKG.querySelector("#w-kg").value=String(a.weight.kg);
+  // ---------------------------
+  // RENDERERS PER INSTRUMENT TYPE
+  // ---------------------------
+  const R = {};
 
-    function syncUnits(){
-      const u=unitsSel.value;
-      if (u==="US"){ heightUS.style.display=""; weightUS.style.display=""; heightM.style.display="none"; weightKG.style.display="none"; }
-      else { heightUS.style.display="none"; weightUS.style.display="none"; heightM.style.display=""; weightKG.style.display=""; }
-    }
-    syncUnits();
-
-    sexSel.addEventListener("change",()=>{ a.sex=sexSel.value||null; onChange(); });
-    ageInput.addEventListener("input",()=>{ const n=Number(ageInput.value); a.age=isNaN(n)?null:n; onChange(); });
-    unitsSel.addEventListener("change",()=>{ a.units=unitsSel.value; syncUnits(); onChange(); });
-    heightUS.querySelector("#h-ft").addEventListener("input",e=>{ a.height.ft=toNum(e.target.value); onChange(); });
-    heightUS.querySelector("#h-in").addEventListener("input",e=>{ a.height.in=toNum(e.target.value); onChange(); });
-    heightM.querySelector("#h-m").addEventListener("input",e=>{ a.height.m=toNum(e.target.value); onChange(); });
-    weightUS.querySelector("#w-lb").addEventListener("input",e=>{ a.weight.lb=toNum(e.target.value); onChange(); });
-    weightKG.querySelector("#w-kg").addEventListener("input",e=>{ a.weight.kg=toNum(e.target.value); onChange(); });
-
-    mount.appendChild(el("div",{class:"bt-grid"},
-      el("div",{}, el("label",{class:"bt-badge"},"Sex"), sexSel),
-      el("div",{}, el("label",{class:"bt-badge"},"Age"), ageInput),
-      el("div",{}, el("label",{class:"bt-badge"},"Units"), unitsSel),
-      el("div",{}, el("label",{class:"bt-badge"},"Height"), heightUS, heightM),
-      el("div",{}, el("label",{class:"bt-badge"},"Weight"), weightUS, weightKG)
-    ));
-  }
-
-  function render_yn_group(sub, mount, targetObj){
-    const grid=el("div",{class:"bt-grid"});
-    (sub.items||[]).forEach(item=>{
-      const name=`${sub.id}__${item.id}`;
-      const yes=el("input",{type:"radio",name,value:"Yes",id:`${name}_y`});
-      const no =el("input",{type:"radio",name,value:"No", id:`${name}_n`});
-      if (targetObj[item.id]==="Yes") yes.checked=true;
-      if (targetObj[item.id]==="No")  no.checked=true;
-      yes.addEventListener("change",()=>{ targetObj[item.id]="Yes"; onChange(); });
-      no .addEventListener("change",()=>{ targetObj[item.id]="No";  onChange(); });
-      grid.appendChild(el("label",{class:"bt-opt"}, yes,el("span",{},"Yes"), el("span",{style:"width:8px"}), no,el("span",{},"No"), el("span",{style:"width:8px"}), el("span",{class:"bt-note"},item.label)));
+  // 1) DEMOGRAPHICS
+  R.demographics = function (host, inst) {
+    const wrap = el('div', { class: 'bt-inst' });
+    // Sex
+    const sexRow = el('div', { class: 'bt-row' });
+    sexRow.appendChild(el('div', { class: 'bt-lbl' }, '<b>Sex</b>'));
+    (inst.items?.find(i => i.key === 'sex')?.options || ['Female', 'Male', 'Other/Prefer not to say']).forEach(opt => {
+      const id = 'sex_' + Math.random().toString(36).slice(2, 7);
+      const lab = el('label', { class: 'bt-opt' });
+      lab.appendChild(el('input', { type: 'radio', name: 'bp_sex', value: String(opt) }));
+      lab.appendChild(document.createTextNode(' ' + String(opt)));
+      sexRow.appendChild(lab);
     });
-    if (sub.note && window.BT_CFG?.ui?.showSectionNotes) mount.appendChild(el("div",{class:"bt-help"},sub.note));
-    mount.appendChild(grid);
-  }
+    wrap.appendChild(sexRow);
 
-  function render_likert_group(sub, mount, targetObj){
-    const scale=(window.BT_CONFIG.scales?.[sub.scale_ref])||[];
-    if (!scale.length){ mount.appendChild(el("div",{class:"bt-help"},"Scale config missing.")); return; }
-    const grid=el("div",{class:"bt-grid"});
-    (sub.items||[]).forEach(item=>{
-      const name=`${sub.id}__${item.id}`;
-      const row=el("div",{class:"bt-row"}, el("div",{class:"bt-note"},item.label));
-      scale.forEach(opt=>{
-        const id=`${name}_${opt.value}`;
-        const input=el("input",{type:"radio",name,id,value:String(opt.value)});
-        if (Number(targetObj[item.id])===Number(opt.value)) input.checked=true;
-        input.addEventListener("change",()=>{ targetObj[item.id]=Number(opt.value); onChange(); });
-        row.appendChild(el("label",{class:"bt-opt",for:id}, input, el("span",{},opt.label)));
-      });
-      grid.appendChild(row);
+    // Age
+    const ageRow = el('div', { class: 'bt-row' });
+    ageRow.appendChild(el('label', { class: 'bt-lbl' }, '<b>Age (years)</b>'));
+    ageRow.appendChild(el('input', { type: 'number', min: '18', max: '120', step: '1', 'data-out': 'age' }));
+    wrap.appendChild(ageRow);
+
+    host.appendChild(wrap);
+  };
+
+  // 2) BMI
+  R.bmi = function (host, inst) {
+    const wrap = el('div', { class: 'bt-inst' });
+
+    const unitRow = el('div', { class: 'bt-row' });
+    unitRow.appendChild(el('div', { class: 'bt-lbl' }, '<b>Units</b>'));
+    ['US (lb, ft/in)', 'Metric (kg, m)'].forEach((label, idx) => {
+      const lab = el('label', { class: 'bt-opt' });
+      lab.appendChild(el('input', { type: 'radio', name: 'bp_units', value: idx === 0 ? 'US' : 'Metric', ...(idx === 0 ? { checked: 'checked' } : {}) }));
+      lab.appendChild(document.createTextNode(' ' + label));
+      unitRow.appendChild(lab);
     });
-    if (sub.note && window.BT_CFG?.ui?.showSectionNotes) mount.appendChild(el("div",{class:"bt-help"},sub.note));
-    mount.appendChild(grid);
-  }
+    wrap.appendChild(unitRow);
 
-  // item.options → sub.options_ref → sub.options
-  function render_radio_group(sub, mount, targetObj){
-    const grid=el("div",{class:"bt-grid"});
-    (sub.items||[]).forEach(item=>{
-      const name=`${sub.id}__${item.id}`;
-      const row=el("div",{class:"bt-row"}, el("div",{class:"bt-note"},item.label));
-      let opts=[];
-      if (Array.isArray(item.options)&&item.options.length){ opts=item.options; }
-      else if (sub.options_ref && Array.isArray(window.BT_CONFIG.scales?.[sub.options_ref])){ opts=window.BT_CONFIG.scales[sub.options_ref]; }
-      else if (Array.isArray(sub.options)&&sub.options.length){ opts=sub.options; }
-      if (!opts.length){ row.appendChild(el("div",{class:"bt-help"},"Options missing in config.")); }
-      else {
-        opts.forEach(opt=>{
-          const id=`${name}_${opt.value}`;
-          const input=el("input",{type:"radio",name,id,value:String(opt.value)});
-          if (Number(targetObj[item.id])===Number(opt.value)) input.checked=true;
-          input.addEventListener("change",()=>{ targetObj[item.id]=Number(opt.value); onChange(); });
-          row.appendChild(el("label",{class:"bt-opt",for:id}, input, el("span",{},opt.label)));
-        });
+    // US fields
+    const us = el('div', { class: 'bt-row', 'data-us': '1' });
+    us.appendChild(el('span', { class: 'bt-lbl' }, '<b>US</b>'));
+    us.appendChild(el('input', { type: 'number', placeholder: 'Height (ft)', min: '3', max: '8', step: '1', 'data-id': 'height-ft' }));
+    us.appendChild(el('input', { type: 'number', placeholder: 'Height (in)', min: '0', max: '11', step: '1', 'data-id': 'height-in' }));
+    us.appendChild(el('input', { type: 'number', placeholder: 'Weight (lb)', min: '50', max: '600', step: '1', 'data-id': 'weight-lb' }));
+    wrap.appendChild(us);
+
+    // Metric fields
+    const met = el('div', { class: 'bt-row', 'data-metric': '1', style: 'display:none' });
+    met.appendChild(el('span', { class: 'bt-lbl' }, '<b>Metric</b>'));
+    met.appendChild(el('input', { type: 'number', placeholder: 'Height (m)', step: '0.01', min: '1.0', max: '2.5', 'data-id': 'height-m' }));
+    met.appendChild(el('input', { type: 'number', placeholder: 'Weight (kg)', step: '0.1', min: '30', max: '250', 'data-id': 'weight-kg' }));
+    wrap.appendChild(met);
+
+    // Mini outputs
+    const outs = el('div', { class: 'bt-mini' }, `
+      <span class="bt-badge">BMI <span data-out="bmi-val">—</span></span>
+      <span class="bt-badge">Tier <span data-out="bmi-tier">—</span></span>
+    `);
+    wrap.appendChild(outs);
+
+    // Wire units toggle + BMI calc
+    wrap.addEventListener('input', () => {
+      const units = $('input[name="bp_units"]:checked', wrap)?.value || 'US';
+      $('[data-us]', wrap).style.display = units === 'US' ? '' : 'none';
+      $('[data-metric]', wrap).style.display = units === 'Metric' ? '' : 'none';
+
+      // compute BMI if possible
+      let bmi = null;
+      if (units === 'US') {
+        const ft = parseFloat($('[data-id="height-ft"]', wrap)?.value || '');
+        const inch = parseFloat($('[data-id="height-in"]', wrap)?.value || '');
+        const lb = parseFloat($('[data-id="weight-lb"]', wrap)?.value || '');
+        if (ft > 0 && inch >= 0 && lb > 0) {
+          const m = (ft * 12 + inch) * 0.0254;
+          const kg = lb * 0.45359237;
+          bmi = kg / (m * m);
+        }
+      } else {
+        const m = parseFloat($('[data-id="height-m"]', wrap)?.value || '');
+        const kg = parseFloat($('[data-id="weight-kg"]', wrap)?.value || '');
+        if (m > 0 && kg > 0) bmi = kg / (m * m);
       }
-      grid.appendChild(row);
-    });
-    if (sub.note && window.BT_CFG?.ui?.showSectionNotes) mount.appendChild(el("div",{class:"bt-help"},sub.note));
-    mount.appendChild(grid);
-  }
+      const setOut = (k, v) => { const t = $(`[data-out="${k}"]`, wrap); if (t) t.textContent = v; };
+      setOut('bmi-val', bmi ? bmi.toFixed(1) : '—');
 
-  function renderSection(section){
-    const mount=document.querySelector(`[data-mount="${section.id}"]`);
-    const cat  =document.querySelector(`details.bt-cat[data-section="${section.id}"]`);
-    if (!mount || !cat) return;
-    document.getElementById(`${section.id}-loading`)?.remove();
-    clearNode(mount);
-
-    (section.subsections||[]).forEach(sub=>{
-      // Questionnaire accordions (start closed)
-      const wrapper=el("details",{class:"bt-acc"});
-      const sum=el("summary",{}, caret()," ",
-        sub.id==="demographics"?"Demographics":
-        sub.id==="history_yesno"?"Medical History & Lifestyle":
-        sub.id==="sleep"?"Sleep":
-        sub.id==="stress"?"Perceived Stress":
-        sub.id==="activity_yesno"?"Physical Activity":
-        sub.id==="lsns6"?"LSNS-6 (Social Network)":
-        sub.id==="ucla3"?"UCLA-3 (Loneliness)":
-        sub.id==="hhies"?"HHIE-S (Hearing)":
-        sub.id==="vfq7"?"VFQ-3of7 (Vision)":sub.id
-      );
-      wrapper.appendChild(sum);
-      const inner=el("div",{style:"padding:10px;"});
-      if (section.id==="personal"){
-        if (sub.type==="demographics") render_demographics(sub,inner);
-        else if (sub.type==="yn_group" && sub.id==="history_yesno") render_yn_group(sub,inner,STATE.answers.personal.history);
-        else if (sub.type==="likert_group" && sub.id==="sleep")     render_likert_group(sub,inner,STATE.answers.personal.sleep);
-        else if (sub.type==="likert_group" && sub.id==="stress")    render_likert_group(sub,inner,STATE.answers.personal.stress);
-        else if (sub.type==="yn_group" && sub.id==="activity_yesno")render_yn_group(sub,inner,STATE.answers.personal.activity);
-      } else if (section.id==="social"){
-        if (sub.id==="lsns6") render_radio_group(sub,inner,STATE.answers.social.lsns);
-        if (sub.id==="ucla3") render_radio_group(sub,inner,STATE.answers.social.ucla);
-      } else if (section.id==="sensory"){
-        if (sub.id==="hhies") render_radio_group(sub,inner,STATE.answers.sensory.hhies);
-        if (sub.id==="vfq7")  render_radio_group(sub,inner,STATE.answers.sensory.vfq7);
-      }
-      wrapper.appendChild(inner);
-      mount.appendChild(wrapper);
-    });
-
-    // Per-section Clear button
-    mount.appendChild(
-      el("div",{class:"bt-row",style:"margin-top:10px"},
-        el("button",{type:"button",class:"bt-btn secondary",onClick:()=>{ resetSectionState(section.id); recollapseSection(section.id);
-          // clear inputs just in this category
-          const scope = document.querySelector(`details.bt-cat[data-section="${section.id}"]`);
-          scope?.querySelectorAll('input[type="radio"], input[type="number"], select').forEach(el=>{
-            if (el.type==="radio") el.checked=false;
-            else if (el.tagName==="SELECT") el.selectedIndex=0;
-            else el.value="";
-          });
-          // Personal layout back to US
-          if (section.id==="personal"){
-            const unitsSel=scope?.querySelector("#dem-units");
-            const heightUS=scope?.querySelector("#height-us");
-            const weightUS=scope?.querySelector("#weight-us");
-            const heightM =scope?.querySelector("#height-m");
-            const weightKG=scope?.querySelector("#weight-kg");
-            if (unitsSel) unitsSel.value="US";
-            if (heightUS) heightUS.style.display="";
-            if (weightUS) weightUS.style.display="";
-            if (heightM)  heightM.style.display="none";
-            if (weightKG) weightKG.style.display="none";
-          }
-          onChange();
-        }},"Clear This Section")
-      )
-    );
-  }
-
-  // ---------- Scoring + Summary ----------
-  function computeAll(){
-    if (!window.BT_Scoring) return {sections:[],overall:null};
-    const results=[]; try{
-      results.push(window.BT_Scoring.computePersonal(STATE.answers.personal));
-      results.push(window.BT_Scoring.computeSocial(STATE.answers.social));
-      results.push(window.BT_Scoring.computeSensory(STATE.answers.sensory));
-    }catch(e){ console.error(e); }
-    const overall = window.BT_Scoring.combineSections(results);
-    return { sections:results, overall };
-  }
-  function buildSummaries(secResults){
-    if (!window.BT_Summary) return { per:{}, overall:"Summary unavailable." };
-    return { per: window.BT_Summary.buildSectionSummaries(secResults, STATE.csv),
-             overall: window.BT_Summary.buildOverallSummary(secResults) };
-  }
-  function renderSummaryBox(text){
-    const box=document.getElementById("bt-summary-text");
-    box && (box.textContent = text || (window.BT_CFG?.copy?.summaryEmpty || "Complete the sections to see a personalized summary here."));
-  }
-  function onChange(){
-    const { sections } = computeAll();
-    const { per, overall } = buildSummaries(sections);
-    renderSummaryBox([per.personal||"","",per.social||"","",per.sensory||"","",overall||""].join("\n").trim());
-  }
-
-  // ---------- Buttons ----------
-  function wireButtons(){
-    const copyBtn=document.getElementById("bt-copy");
-    const resetBtn=document.getElementById("bt-reset");
-    copyBtn?.addEventListener("click",async ()=>{
-      const txt=document.getElementById("bt-summary-text")?.textContent||"";
-      try{ await navigator.clipboard.writeText(txt); copyBtn.textContent="Copied"; setTimeout(()=>copyBtn.textContent="Copy Summary",1200);}catch{ copyBtn.textContent="Copy failed"; setTimeout(()=>copyBtn.textContent="Copy Summary",1500); }
-    });
-    resetBtn?.addEventListener("click",()=>{
-      STATE.answers={
-        personal:{ sex:null, age:null, units:"US", height:{ft:null,in:null,m:null}, weight:{lb:null,kg:null}, history:{}, sleep:{}, stress:{}, activity:{} },
-        social:{ lsns:{}, ucla:{} },
-        sensory:{ hhies:{}, vfq7:{} }
+      // Tier from config bands if provided
+      const band = (x, bands) => {
+        if (!bands) return '—';
+        for (const b of bands) if (x >= b.min && x <= b.max) return b.label;
+        return '—';
       };
-      document.querySelectorAll('input[type="radio"], input[type="number"], select').forEach(el=>{
-        if (el.type==="radio") el.checked=false; else if (el.tagName==="SELECT") el.selectedIndex=0; else el.value="";
+      const bmiBands = inst?.bands?.bmi;
+      setOut('bmi-tier', bmi ? band(bmi, bmiBands) : '—');
+
+      emitSectionUpdate('personal', 'Personal Assessment', { bmi: bmi ? +bmi.toFixed(1) : null });
+    });
+
+    host.appendChild(wrap);
+  };
+
+  // 3) Y/N LIST (history or activity)
+  R.yn_list = function (host, inst) {
+    const grid = el('div', { class: 'bt-grid' });
+    (inst.items || []).forEach(it => {
+      const card = el('div', { class: 'bt-card' });
+      card.innerHTML = `
+        <div class="bt-lbl" style="font-weight:600;margin-bottom:6px">${it.label}</div>
+        <label class="bt-opt"><input type="radio" name="yn_${it.key}" value="Yes"> Yes</label>
+        <label class="bt-opt"><input type="radio" name="yn_${it.key}" value="No"> No</label>
+        <div class="bt-note">${it.yesTier ? `Yes → ${it.yesTier} risk.` : it.noTier ? `No → ${it.noTier} risk.` : ''}</div>
+      `;
+      grid.appendChild(card);
+    });
+    host.appendChild(grid);
+  };
+
+  // 4) LIKERT (score = sum; optional reverseKeys)
+  R.likert = function (host, inst) {
+    const SCALE = inst.options || [
+      { label: 'Never', value: 0 },
+      { label: 'Rarely', value: 1 },
+      { label: 'Sometimes', value: 2 },
+      { label: 'Often', value: 3 },
+      { label: 'Always', value: 4 }
+    ];
+    (inst.items || []).forEach(q => {
+      const row = el('div', { class: 'bt-row' });
+      row.appendChild(el('div', { class: 'bt-lbl' }, `<b>${q.label}</b>`));
+      SCALE.forEach(opt => {
+        const lab = el('label', { class: 'bt-opt' });
+        lab.appendChild(el('input', { type: 'radio', name: inst.id + '_' + q.key, value: String(opt.value) }));
+        lab.appendChild(document.createTextNode(' ' + opt.label));
+        row.appendChild(lab);
       });
-      // Personal layout back to US
-      const pScope=document.querySelector('details.bt-cat[data-section="personal"]');
-      if (pScope){
-        const unitsSel=pScope.querySelector("#dem-units");
-        const heightUS=pScope.querySelector("#height-us");
-        const weightUS=pScope.querySelector("#weight-us");
-        const heightM =pScope.querySelector("#height-m");
-        const weightKG=pScope.querySelector("#weight-kg");
-        if (unitsSel) unitsSel.value="US";
-        if (heightUS) heightUS.style.display="";
-        if (weightUS) weightUS.style.display="";
-        if (heightM)  heightM.style.display="none";
-        if (weightKG) weightKG.style.display="none";
+      host.appendChild(row);
+    });
+
+    // Score summary line (optional visual)
+    const sumLine = el('div', { class: 'bt-mini' }, `<span class="bt-badge"><span data-out="${inst.id}-score">0</span></span>`);
+    host.appendChild(sumLine);
+
+    host.addEventListener('input', () => {
+      const rev = new Set(inst.reverseKeys || []);
+      let sum = 0;
+      (inst.items || []).forEach(q => {
+        const val = parseInt($(`input[name="${inst.id}_${q.key}"]:checked`, host)?.value || '', 10);
+        if (!isNaN(val)) sum += rev.has(q.key) ? (4 - val) : val;
+      });
+      const out = $(`[data-out="${inst.id}-score"]`, host);
+      if (out) out.textContent = String(sum);
+      emitSectionUpdate(inst.id, inst.title, { score: sum });
+    });
+  };
+
+  // 5) RADIO (N items share same scale defined in options)
+  R.radio = function (host, inst) {
+    const SCALE = inst.options || [];
+    (inst.items || []).forEach(q => {
+      const row = el('div', { class: 'bt-row' });
+      row.appendChild(el('div', { class: 'bt-lbl' }, `<b>${q.label}</b>`));
+      (q.options || SCALE).forEach(opt => {
+        const lab = el('label', { class: 'bt-opt' });
+        lab.appendChild(el('input', { type: 'radio', name: inst.id + '_' + q.key, value: String(opt.value) }));
+        lab.appendChild(document.createTextNode(' ' + opt.label));
+        row.appendChild(lab);
+      });
+      host.appendChild(row);
+    });
+  };
+
+  // 6) WEIGHTED SELECT (0–3 frequency × per-item weight)
+  R.weighted_select = function (host, inst) {
+    const SCALE = inst.scale || [
+      { label: 'Never (0)', value: 0 },
+      { label: 'Occasionally (1)', value: 1 },
+      { label: 'Regularly (2)', value: 2 },
+      { label: 'Frequently (3)', value: 3 }
+    ];
+    (inst.items || []).forEach(it => {
+      const row = el('div', { class: 'bt-row' });
+      row.appendChild(el('div', { class: 'bt-lbl' }, `<b>${it.label}</b> <span class="bt-note">(weight ${it.weight || 1})</span>`));
+      const sel = el('select', { 'data-weight': String(it.weight || 1), 'data-key': it.key, class: 'bt-sel' });
+      sel.appendChild(el('option', { value: '' }, 'Choose Your Answer'));
+      SCALE.forEach(opt => sel.appendChild(el('option', { value: String(opt.value) }, opt.label)));
+      row.appendChild(sel);
+      host.appendChild(row);
+    });
+
+    // Live score (percent of max) for summary.js
+    function compute() {
+      const selects = $all('select.bt-sel', host);
+      let score = 0, max = 0;
+      selects.forEach(sel => {
+        const w = Number(sel.getAttribute('data-weight') || 1);
+        const v = Number(sel.value || 0);
+        score += v * w;
+        max += 3 * w;
+      });
+      const pct = max ? Math.round((score / max) * 100) : 0;
+      emitSectionUpdate(inst.id, inst.title, { score: Math.round(score), max: Math.round(max), pct });
+    }
+    host.addEventListener('change', compute);
+    compute();
+  };
+
+  // 7) MEDICATIONS (class → meds; statusOptions 0/1/2; current use drives risk)
+  R.medications = function (host, inst) {
+    const classes = inst.classes || [];
+    const statuses = inst.statusOptions || [
+      { label: 'No / Never used', value: 0 },
+      { label: 'Taken in the past', value: 1 },
+      { label: 'Currently taking', value: 2 }
+    ];
+
+    classes.forEach(cls => {
+      const block = el('div', { class: 'bt-card' });
+      block.innerHTML = `<div class="bt-lbl" style="font-weight:700;margin-bottom:8px">${cls.class}</div>`;
+      (cls.meds || []).forEach(m => {
+        const row = el('div', { class: 'bt-row' });
+        row.appendChild(el('span', { class: 'bt-badge' }, m));
+        statuses.forEach(s => {
+          const lab = el('label', { class: 'bt-opt' });
+          lab.appendChild(el('input', { type: 'radio', name: `med_${cls.class}_${m}`, value: String(s.value) }));
+          lab.appendChild(document.createTextNode(' ' + s.label));
+          row.appendChild(lab);
+        });
+        block.appendChild(row);
+      });
+      host.appendChild(block);
+    });
+
+    function compute() {
+      // Simple composite: sum baseRisk for “currently taking” (value==2)
+      let score = 0, current = 0;
+      classes.forEach(cls => {
+        (cls.meds || []).forEach(m => {
+          const v = Number($(`input[name="med_${cls.class}_${m}"]:checked`, host)?.value || 0);
+          if (v === 2) { score += (cls.baseRisk || 1); current++; }
+        });
+      });
+      emitSectionUpdate(inst.id, inst.title, { score, current });
+    }
+    host.addEventListener('change', compute);
+    compute();
+  };
+
+  // ---------------------------
+  // CATEGORY RENDERER
+  // ---------------------------
+  function renderCategory(container, cat) {
+    // details shell
+    const details = el('details', { class: 'bt-cat' }); // start collapsed (no open attr)
+    const sum = el('summary', { class: 'bt-sum' });
+    const caret = el('span', { class: 'bt-caret' }, CARET_CLOSED);
+    const title = el('span', { class: 'bt-title' }, ' ' + (cat.title || cat.id));
+    sum.appendChild(caret);
+    sum.appendChild(title);
+    details.appendChild(sum);
+
+    const body = el('div', { class: 'bt-body' });
+    if (cat.note) body.appendChild(el('div', { class: 'bt-note' }, cat.note));
+
+    // instruments
+    (cat.instruments || []).forEach(inst => {
+      const instWrap = el('div', { class: 'bt-inst-wrap' });
+      instWrap.appendChild(el('div', { class: 'bt-inst-title' }, `<b>${inst.title || inst.id}</b>`));
+      const mount = el('div', { class: 'bt-inst-mount' });
+      instWrap.appendChild(mount);
+
+      const fn = R[inst.type];
+      if (typeof fn === 'function') {
+        fn(mount, inst);
+      } else {
+        mount.appendChild(el('div', { class: 'bt-note' }, `Unsupported instrument type: ${inst.type}`));
       }
-      hardCollapseAll();
-      renderSummaryBox(window.BT_CFG?.copy?.summaryEmpty || "Complete the sections to see a personalized summary here.");
+      body.appendChild(instWrap);
+    });
+
+    // Per-category clear button
+    const clearLbl = cat.clearLabel || (window.CFG && CFG.ui && CFG.ui.categoryClearLabel) || 'Clear This Section';
+    const btnRow = el('div', { class: 'bt-btnrow' });
+    const clr = el('button', { type: 'button', class: 'bt-btn bt-btn-clear' }, clearLbl);
+    btnRow.appendChild(clr);
+    body.appendChild(btnRow);
+
+    clr.addEventListener('click', () => {
+      resetInputs(body);
+      details.removeAttribute('open'); // re-collapse
+      emitSectionUpdate(cat.id, cat.title, { cleared: true });
+    });
+
+    // caret toggle
+    details.addEventListener('toggle', () => {
+      const isOpen = details.open;
+      caret.textContent = isOpen ? CARET_OPEN : CARET_CLOSED;
+    });
+
+    details.appendChild(body);
+    container.appendChild(details);
+  }
+
+  // Build nav pills dynamically
+  function renderTopNav(navHost, cats) {
+    if (!navHost) return;
+    navHost.innerHTML = ''; // clear existing
+    cats.forEach(cat => {
+      const b = el('button', { type: 'button', class: 'bt-pill' }, cat.title || cat.id);
+      b.addEventListener('click', () => {
+        const elCat = $(`details.bt-cat[data-id="${cat.id}"]`);
+        if (elCat) { elCat.setAttribute('open', 'open'); elCat.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+      navHost.appendChild(b);
+    });
+    // Add Summary pill if a summary card exists
+    const summaryEl = $('[data-role="summary-card"]') || $('.summary-card');
+    if (summaryEl) {
+      const sb = el('button', { type: 'button', class: 'bt-pill' }, 'Summary');
+      sb.addEventListener('click', () => summaryEl.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      navHost.appendChild(sb);
+    }
+  }
+
+  // Global clear form button wiring (if present in page under summary)
+  function wireGlobalClear() {
+    const btn = document.querySelector('[data-action="reset"], .bp-btn[data-action="reset"]');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      $all('details.bt-cat').forEach(d => {
+        resetInputs(d);
+        d.removeAttribute('open');
+      });
     });
   }
 
-  // ---------- Boot ----------
-  async function boot(){
-    try{
-      const { formCfg, csvRows } = await loadData();
-      STATE.sections = formCfg.sections || [];
-      STATE.csv = csvRows || [];
-      for (const section of STATE.sections) renderSection(section);
-      hardCollapseAll(); // force both category & questionnaire collapse
-      renderSummaryBox(window.BT_CFG?.copy?.summaryEmpty || "Complete the sections to see a personalized summary here.");
-      wireButtons();
-    }catch(err){
-      console.error(err);
-      renderSummaryBox("Failed to load configuration or data. Please check your repository paths.");
-    }
+  // ---------------------------
+  // MAIN
+  // ---------------------------
+  async function main() {
+    // Fetch JSON config
+    const res = await fetch(CFG.paths.configJson, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load instruments config: ' + res.status);
+    const cfg = await res.json();
+
+    // Targets
+    const mount = document.getElementById('bt-app') || document.body; // fallback
+    const catHost = $('#bt-categories', mount) || mount; // where cards go
+    const navHost = $('#bt-topnav') || document.querySelector('.bt-topnav');
+
+    // Render all categories present in JSON (no whitelist)
+    catHost.innerHTML = '';
+    (cfg.categories || []).forEach(cat => {
+      // add data-id to enable nav scroll
+      const container = el('div', { });
+      renderCategory(container, cat);
+      const card = container.firstElementChild;
+      card.setAttribute('data-id', cat.id);
+      catHost.appendChild(card);
+    });
+
+    // Top nav
+    renderTopNav(navHost, cfg.categories || []);
+
+    // Start collapsed
+    collapseAllCats(catHost);
+
+    // Global clear
+    wireGlobalClear();
   }
-  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+
+  // Kick off
+  document.addEventListener('DOMContentLoaded', () => {
+    main().catch(err => {
+      console.error(err);
+      alert('Failed to initialize app. Open console for details.');
+    });
+  });
+
+  // ---------------------------
+  // Minimal styles (only if your page doesn’t already include them)
+  // ---------------------------
+  const css = `
+  .bt-topnav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+  .bt-pill{border:1px solid #e5e7eb;background:#f8fafc;padding:6px 12px;border-radius:999px;font-weight:600;cursor:pointer}
+  .bt-cat{border:1px solid #e5e7eb;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.04);margin:12px 0}
+  .bt-cat > summary{list-style:none;display:flex;gap:8px;align-items:center;padding:12px 14px;cursor:pointer;font-weight:700}
+  .bt-cat > summary::-webkit-details-marker{display:none}
+  .bt-body{padding:12px 14px}
+  .bt-caret{display:inline-block;width:1em;text-align:center}
+  .bt-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+  .bt-opt{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
+  .bt-lbl{min-width:220px}
+  .bt-badge{display:inline-block;padding:3px 8px;border-radius:9999px;border:1px solid #e5e7eb;background:#f9fafb}
+  .bt-note{color:#6b7280;font-size:.9rem;margin:4px 0 8px}
+  .bt-mini{display:flex;gap:10px;margin:8px 0}
+  .bt-btnrow{margin-top:8px}
+  .bt-btn{background:#111827;color:#fff;border:none;border-radius:9999px;padding:8px 12px;font-weight:600;cursor:pointer}
+  `;
+  const styleTag = el('style'); styleTag.textContent = css; document.head.appendChild(styleTag);
 })();
