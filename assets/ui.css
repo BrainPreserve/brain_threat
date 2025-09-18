@@ -1,0 +1,54 @@
+/* Basic UI for Brain Threat Analysis (readable, senior-friendly) */
+:root{
+  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --line:#e5e7eb;
+  --accent:#2563eb; --accent-ink:#ffffff; --pill-bg:#f1f5f9; --pill-line:#e2e8f0;
+}
+*{ box-sizing: border-box; }
+html,body{ background:var(--bg); color:var(--ink); }
+h1,h2,h3{ margin:0 0 8px; }
+section h2{ font-size:1.15rem; font-weight:800; }
+.bt-card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04); padding:16px;
+}
+.bt-summary{
+  white-space:pre-wrap; background:#f9fafb; border:1px dashed var(--line);
+  border-radius:12px; padding:12px; color:#0f172a;
+}
+.bt-muted{ color:#64748b; }
+label.bt-badge{ display:inline-block; padding:3px 8px; border:1px solid var(--line);
+  border-radius:9999px; background:#f9fafb; font-size:.85rem; }
+.bt-row{ display:flex; flex-wrap:wrap; gap:10px; margin:8px 0; }
+.bt-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+.bt-opt{ display:flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--line);
+  border-radius:10px; cursor:pointer; background:#fff; }
+input[type="radio"], input[type="checkbox"]{ transform: scale(1.05); }
+input[type="number"], select{ padding:8px 10px; border:1px solid var(--line); border-radius:10px; min-width:120px; }
+.bt-btn{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:9999px;
+  padding:10px 14px; font-weight:700; cursor:pointer;
+}
+.bt-btn.secondary{ background:#111827; }
+.bt-note{ color:#6b7280; font-size:.9rem; }
+.bt-hr{ height:1px; background:#e2e8f0; margin:12px 0; }
+
+/* Accordion */
+details.bt-acc{ border:1px solid var(--line); border-radius:14px; background:#fff; margin:12px 0; }
+details.bt-acc>summary{ cursor:pointer; list-style:none; padding:12px 14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+details.bt-acc>summary::-webkit-details-marker{ display:none; }
+details.bt-acc[open]>summary{ border-bottom:1px solid var(--line); }
+.bt-caret{ display:inline-block; transition:.2s transform; }
+details[open] .bt-caret{ transform: rotate(90deg); }
+
+/* Two-column summary grid (auto-stacks on small screens) */
+.bt-summary-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+@media (max-width:900px){ .bt-summary-grid{ grid-template-columns: 1fr; } }
+
+/* Buttons in Summary section */
+#bt-copy, #bt-reset{
+  background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
+}
+#bt-reset{ background:#111827; }
+
+/* Small help text */
+.bt-help{ color:#4b5563; font-size:.92rem; }
