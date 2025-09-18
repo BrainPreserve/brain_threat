@@ -1,50 +1,66 @@
-// BrainPreserve — global config consumed by assets/app.js, scoring.js, summary.js
-// Paths are relative to site root. Keep filenames/lowercase exactly.
-window.CFG = {
-  paths: {
-    // MUST exist and be publicly readable
-    configJson: 'data/instruments_config.json',
-    masterCsv:  'data/master.csv'
-  },
-  ui: {
-    startCollapsed: true,
-    categoryClearLabel: 'Clear This Section',
-    caretClosed: '▸',
-    caretOpen:   '▾'
-  }
-};
+// assets/config.js
+(function () {
+  "use strict";
 
-// Optional: expose carets for any code that reads BP_UI
-window.BP_UI = { caretClosed: '▸', caretOpen: '▾' };
+  // Global, deterministic configuration consumed by assets/app.js, assets/scoring.js, and assets/summary.js
+  const CONFIG = {
+    // ---- Data locations (do not change without explicit approval) ----
+    paths: {
+      configJson: "data/instruments_config.json", // structure & scoring come from code/config, not CSV
+      masterCsv:  "data/master.csv",              // helper/example text (threat), medication brand names
+    },
 
-// Simple runtime sanity checks (shows a visible message if something is missing)
-(function(){
-  function panic(msg){
-    // Visible inline message so you aren’t staring at a blank page
-    var box = document.querySelector('#bt-categories') || document.body;
-    var div = document.createElement('div');
-    div.style.cssText = 'margin:12px 0;padding:12px;border:1px solid #ef4444;background:#fff1f2;color:#991b1b;border-radius:10px';
-    div.textContent = msg;
-    box.prepend(div);
-  }
+    // Always bypass caches to prevent stale assets during iteration/deploys
+    fetchInit: {
+      cache: "no-store",
+    },
 
-  if (!window.CFG || !CFG.paths || !CFG.paths.configJson) {
-    panic('Configuration missing: CFG.paths.configJson not set (assets/config.js).');
-    return;
-  }
+    // ---- UI defaults / invariants ----
+    ui: {
+      startCollapsed: true,                 // all 7 category cards + sub-accordions start collapsed
+      caretClosed: "▸",                     // right-pointing caret when closed
+      caretOpen:   "▾",                     // down-pointing caret when open
+      sectionClearLabel: "Clear This Section",
+      ids: {
+        alert: "bt-alert",                  // red-banner assertion container
+        categories: "bt-categories",        // container where all category cards render
+        summaryContent: "bt-summary-content",
+        copySummaryBtn: "btn-copy-summary",
+        clearAllBtn: "btn-clear-all",
+      },
+      classes: {
+        card: "card",
+        cardHeader: "card-header",
+        cardBody: "card-body",
+        caret: "caret",
+        cardActions: "card-actions",
+        btnPrimary: "primary",
+        btnDanger: "danger",
+        btnGhost: "ghost",
+      },
+    },
 
-  // Proactively check the JSON path so failures are obvious
-  fetch(CFG.paths.configJson, { cache: 'no-store' })
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + CFG.paths.configJson);
-      return r.json();
-    })
-    .then(j => {
-      if (!j || !Array.isArray(j.categories) || j.categories.length === 0) {
-        panic('Loaded instruments_config.json but it has no categories.');
-      }
-    })
-    .catch(err => {
-      panic('Cannot load ' + CFG.paths.configJson + ': ' + (err && err.message ? err.message : err));
-    });
+    // ---- CSV contract (STRICT) ----
+    csv: {
+      // Require these headers exactly; the app will raise a visible RED BANNER if any are missing.
+      requiredHeaders: ["instrument_id", "item_key", "threat", "brand_name"],
+      // Build lookups ONLY as specified; keys are normalized to lower-case before lookup.
+      lookups: {
+        threatByKey: true, // threatByKey[item_key.toLowerCase()] = threat
+        brandByKey:  true, // brandByKey[item_key.toLowerCase()]  = brand_name
+      },
+      normalizeKeysToLowerCase: true,
+    },
+
+    // ---- Determinism & guardrails ----
+    strict: {
+      // If a required CSV column is missing OR an item’s csvKey does not map, show a RED banner and log details.
+      redBannerOnMissing: true,
+      // Do not infer/guess fields, options, or thresholds from CSV.
+      noHeuristics: true,
+    },
+  };
+
+  // Expose to other modules
+  window.BT_CONFIG = CONFIG;
 })();
