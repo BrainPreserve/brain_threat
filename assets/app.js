@@ -4,6 +4,7 @@
    - Renders questionnaires (config-driven)
    - Tracks answers; computes scores; builds summaries
    - Wires Copy and Clear buttons (per-section + global) with guaranteed re-collapse
+   - Accordions default CLOSED unless config explicitly sets startCollapsed === false
 */
 (function(){
   // -----------------------------
@@ -161,14 +162,14 @@
       else if (el.tagName === "SELECT") el.selectedIndex = 0;
       else el.value = "";
     });
-    // For Personal, restore US layout visibility
+    // Personal: restore US layout visibility
     if (sectionId === "personal"){
       const unitsSel = card.querySelector("#dem-units");
       const heightUS = card.querySelector("#height-us");
       const weightUS = card.querySelector("#weight-us");
       const heightM  = card.querySelector("#height-m");
       const weightKG = card.querySelector("#weight-kg");
-      if (unitsSel){ unitsSel.value = "US"; }
+      if (unitsSel) unitsSel.value = "US";
       if (heightUS) heightUS.style.display = "";
       if (weightUS) weightUS.style.display = "";
       if (heightM)  heightM.style.display = "none";
@@ -299,15 +300,24 @@
     mount.appendChild(grid);
   }
 
+  // FIXED: now supports item.options → sub.options_ref → sub.options
   function render_radio_group(sub, mount, targetObj){
     const grid = el("div", { class:"bt-grid" });
     (sub.items||[]).forEach(item => {
       const name = `${sub.id}__${item.id}`;
       const row = el("div", { class:"bt-row" }, el("div", { class:"bt-note" }, item.label));
-      const opts = sub.options_ref
-        ? (window.BT_CONFIG.scales && window.BT_CONFIG.scales[sub.options_ref]) || []
-        : (sub.options || []);
-      if (!Array.isArray(opts) || !opts.length){
+
+      // Priority: item.options (e.g., VFQ-3of7) → sub.options_ref (e.g., LSNS/UCLA) → sub.options (e.g., HHIE)
+      let opts = [];
+      if (Array.isArray(item.options) && item.options.length){
+        opts = item.options;
+      } else if (sub.options_ref && window.BT_CONFIG.scales && Array.isArray(window.BT_CONFIG.scales[sub.options_ref])){
+        opts = window.BT_CONFIG.scales[sub.options_ref];
+      } else if (Array.isArray(sub.options) && sub.options.length){
+        opts = sub.options;
+      }
+
+      if (!opts.length){
         row.appendChild(el("div", { class:"bt-help" }, "Options missing in config."));
       } else {
         opts.forEach(opt => {
@@ -334,14 +344,17 @@
     const card  = document.querySelector(`section[data-section="${section.id}"]`);
     if (!mount || !card) return;
 
-    // Remove any “Loading…” line
+    // Remove “Loading…” line
     const loadDiv = document.getElementById(`${section.id}-loading`);
     if (loadDiv) loadDiv.remove();
 
     clearNode(mount);
 
     (section.subsections||[]).forEach(sub => {
-      const wrapper = el("details", { class:"bt-acc", open: !window.BT_CFG?.app?.startCollapsed });
+      // Default CLOSED unless startCollapsed === false
+      const openInitial = (window.BT_CFG && window.BT_CFG.app && window.BT_CFG.app.startCollapsed === false) ? true : false;
+      const wrapper = el("details", { class:"bt-acc" });
+      if (openInitial) wrapper.setAttribute("open",""); // only open if explicitly allowed
       const sum = el("summary", {}, caret(), " ",
         sub.id === "demographics"     ? "Demographics" :
         sub.id === "history_yesno"    ? "Medical History & Lifestyle" :
@@ -374,7 +387,7 @@
       mount.appendChild(wrapper);
     });
 
-    // Add per-section Clear button (appears once per category card)
+    // Per-section Clear button
     const btnRow = el("div", { class:"bt-row", style:"margin-top:10px" },
       el("button", {
         type:"button",
@@ -441,7 +454,6 @@
 
     if (resetBtn){
       resetBtn.addEventListener("click", () => {
-        // Reset ALL state
         STATE.answers = {
           personal: {
             sex: null, age: null, units: "US",
@@ -451,13 +463,12 @@
           social: { lsns:{}, ucla:{} },
           sensory:{ hhies:{}, vfq7:{} }
         };
-        // Reset ALL inputs
         document.querySelectorAll('input[type="radio"], input[type="number"], select').forEach(el=>{
           if (el.type === "radio") el.checked = false;
           else if (el.tagName === "SELECT") el.selectedIndex = 0;
           else el.value = "";
         });
-        // Restore US layout visibility in Personal card
+        // Restore US layout in Personal
         const pCard = document.querySelector('section[data-section="personal"]');
         if (pCard){
           const unitsSel = pCard.querySelector("#dem-units");
@@ -471,9 +482,8 @@
           if (heightM)  heightM.style.display = "none";
           if (weightKG) weightKG.style.display = "none";
         }
-        // RE-COLLAPSE ALL CATEGORIES (critical requirement)
+        // Re-collapse all categories
         recollapseAll();
-
         // Reset summary text
         renderSummaryBox((window.BT_CFG?.copy?.summaryEmpty) || "Complete the sections to see a personalized summary here.");
       });
@@ -489,19 +499,16 @@
       STATE.sections = formCfg.sections || [];
       STATE.csv = csvRows || [];
 
-      // Render each declared section card
       for (const section of STATE.sections){
         renderSection(section);
       }
 
-      // Initial summary text
+      // Start collapsed by default unless explicitly disabled
+      const startCollapsed = !(window.BT_CFG && window.BT_CFG.app && window.BT_CFG.app.startCollapsed === false);
+      if (startCollapsed) recollapseAll();
+
       renderSummaryBox((window.BT_CFG?.copy?.summaryEmpty) || "Complete the sections to see a personalized summary here.");
-
-      // Wire buttons
       wireButtons();
-
-      // Ensure everything starts collapsed if configured
-      if (window.BT_CFG?.app?.startCollapsed) recollapseAll();
 
     } catch(err){
       console.error(err);
