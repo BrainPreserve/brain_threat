@@ -1,0 +1,291 @@
+{
+  "version": "1.0",
+  "sections": [
+    {
+      "id": "personal",
+      "label": "Personal Assessment",
+      "subsections": [
+        {
+          "id": "demographics",
+          "type": "demographics",
+          "fields": {
+            "sex": ["Female", "Male", "Other/Prefer not to say"],
+            "age": { "min": 18, "max": 120 },
+            "units": ["US", "Metric"],
+            "height_weight": true
+          }
+        },
+        {
+          "id": "history_yesno",
+          "type": "yn_group",
+          "note": "“Yes” maps to the specified risk tier.",
+          "items": [
+            { "id": "heart", "label": "Do you have Heart Disease?", "yesTier": "High" },
+            { "id": "hbp",   "label": "Do you have High Blood Pressure?", "yesTier": "High" },
+            { "id": "dm",    "label": "Do you have Diabetes?", "yesTier": "High" },
+            { "id": "thy",   "label": "Do you have Thyroid Disease?", "yesTier": "Moderate" },
+            { "id": "ckd",   "label": "Do you have Kidney Disease?", "yesTier": "Moderate" },
+            { "id": "mood",  "label": "Depression, Anxiety, or other Mental Health Issue?", "yesTier": "Moderate" },
+            { "id": "smoke", "label": "Do you Smoke?", "yesTier": "High" },
+            { "id": "alc",   "label": "Do you drink Alcohol (risky/excess use)?", "yesTier": "Moderate" }
+          ]
+        },
+        {
+          "id": "sleep",
+          "type": "likert_group",
+          "scale_ref": "SCALE_0_TO_4",
+          "bands_ref": "sleepBands",
+          "note": "Never=0 … Always=4; total 0–24; 0–5 none, 6–11 mild, 12–17 moderate, 18–24 severe.",
+          "items": [
+            { "id": "sleep1", "label": "How often do you have difficulty falling asleep?" },
+            { "id": "sleep2", "label": "How often do you wake during the night and have difficulty returning to sleep?" },
+            { "id": "sleep3", "label": "How often do you wake too early and cannot return to sleep?" },
+            { "id": "sleep4", "label": "How often do you wake not feeling refreshed?" },
+            { "id": "sleep5", "label": "How often do you feel sleepy during the day?" },
+            { "id": "sleep6", "label": "How often do you take naps during the day?" }
+          ]
+        },
+        {
+          "id": "stress",
+          "type": "likert_group",
+          "scale_ref": "SCALE_0_TO_4",
+          "bands_ref": "stressBands",
+          "note": "Perceived Stress (4 items). Items 2 & 3 reverse-scored. 0–5 low; 6–10 moderate; 11–16 high.",
+          "items": [
+            { "id": "stress1", "label": "Unable to control important things in life (past month)" },
+            { "id": "stress2", "label": "Felt confident about handling personal problems (past month)", "reverse": true },
+            { "id": "stress3", "label": "Felt that things were going your way (past month)", "reverse": true },
+            { "id": "stress4", "label": "Felt difficulties were piling up too high to overcome (past month)" }
+          ]
+        },
+        {
+          "id": "activity_yesno",
+          "type": "yn_group",
+          "note": "“No” answers flag risk as shown.",
+          "items": [
+            { "id": "steps",    "label": "Walking/Steps ≥ 7,000 most days", "noTier": "Moderate" },
+            { "id": "aerobic",  "label": "Moderate/High intensity ≥150/75 min per week", "noTier": "High" },
+            { "id": "strength", "label": "Strength training ≥ 2x per week", "noTier": "High" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "label": "Social & Loneliness",
+      "subsections": [
+        {
+          "id": "lsns6",
+          "type": "radio_group",
+          "options_ref": "LSNS_0_TO_5",
+          "bands_ref": "lsnsBands",
+          "note": "6 items (0–5 each). Total 0–30. 0–11 High risk; 12–15 Moderate; 16–30 Low.",
+          "items": [
+            { "id": "lsns1", "label": "How many RELATIVES do you see or hear from at least once a month?" },
+            { "id": "lsns2", "label": "How many RELATIVES do you feel at ease with to talk about private matters?" },
+            { "id": "lsns3", "label": "How many RELATIVES could you call on for help?" },
+            { "id": "lsns4", "label": "How many FRIENDS do you see or hear from at least once a month?" },
+            { "id": "lsns5", "label": "How many FRIENDS do you feel at ease with to talk about private matters?" },
+            { "id": "lsns6", "label": "How many FRIENDS could you call on for help?" }
+          ]
+        },
+        {
+          "id": "ucla3",
+          "type": "radio_group",
+          "options_ref": "UCLA_1_TO_3",
+          "bands_ref": "uclaBands",
+          "note": "3 items. Hardly ever=1, Some=2, Often=3. Total 3–9.",
+          "items": [
+            { "id": "ucla1", "label": "How often do you feel that you lack companionship?" },
+            { "id": "ucla2", "label": "How often do you feel left out?" },
+            { "id": "ucla3", "label": "How often do you feel isolated from others?" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sensory",
+      "label": "Sensory (Hearing • Vision)",
+      "subsections": [
+        {
+          "id": "hhies",
+          "type": "radio_group",
+          "options": [
+            { "label": "Yes", "value": 4 },
+            { "label": "Sometimes", "value": 2 },
+            { "label": "No", "value": 0 }
+          ],
+          "bands_ref": "hhiesBands",
+          "note": "HHIE-S: Yes=4, Sometimes=2, No=0. Total 0–40.",
+          "items": [
+            { "id": "h1",  "label": "Does a hearing problem cause you to feel embarrassed when meeting new people?" },
+            { "id": "h2",  "label": "Does a hearing problem cause you to feel frustrated when talking to members of your family?" },
+            { "id": "h3",  "label": "Do you have difficulty hearing when someone speaks in a whisper?" },
+            { "id": "h4",  "label": "Do you feel handicapped by a hearing problem?" },
+            { "id": "h5",  "label": "Does a hearing problem cause you difficulty when visiting friends, relatives or neighbors?" },
+            { "id": "h6",  "label": "Does a hearing problem cause you to attend religious services less often than you would like?" },
+            { "id": "h7",  "label": "Does a hearing problem cause you to have arguments with family members?" },
+            { "id": "h8",  "label": "Does a hearing problem cause you difficulty when listening to TV or radio?" },
+            { "id": "h9",  "label": "Do you feel that any difficulty with your hearing limits or hampers your personal or social life?" },
+            { "id": "h10", "label": "Does a hearing problem cause you difficulty when in a restaurant with relatives or friends?" }
+          ]
+        },
+        {
+          "id": "vfq7",
+          "type": "radio_group",
+          "routing": "vfq_3_of_7",
+          "note": "VFQ-3oo7: 7 items displayed; validated score uses 3 via automated routing; higher=better (0–100).",
+          "items": [
+            {
+              "id": "v1",
+              "label": "Are you limited in the kinds of things you can do because of your vision?",
+              "options": [
+                { "label": "All of the time", "value": 1 },
+                { "label": "Most of the time", "value": 2 },
+                { "label": "Some of the time", "value": 3 },
+                { "label": "A little of the time", "value": 4 },
+                { "label": "None of the time", "value": 5 }
+              ]
+            },
+            {
+              "id": "v2",
+              "label": "Wearing glasses, how much difficulty do you have reading small print (e.g., medicine bottle, legal forms)?",
+              "options": [
+                { "label": "No difficulty at all", "value": 1 },
+                { "label": "A little difficulty", "value": 2 },
+                { "label": "Moderate difficulty", "value": 3 },
+                { "label": "Extreme difficulty", "value": 4 },
+                { "label": "Stopped because of eyesight", "value": 5 },
+                { "label": "Stopped for other reasons/not interested", "value": 6 }
+              ]
+            },
+            {
+              "id": "v3",
+              "label": "Because of your eyesight, how much difficulty do you have seeing how people react to things you say?",
+              "options": [
+                { "label": "No difficulty at all", "value": 1 },
+                { "label": "A little difficulty", "value": 2 },
+                { "label": "Moderate difficulty", "value": 3 },
+                { "label": "Extreme difficulty", "value": 4 },
+                { "label": "Stopped because of eyesight", "value": 5 },
+                { "label": "Stopped for other reasons/not interested", "value": 6 }
+              ]
+            },
+            {
+              "id": "v4",
+              "label": "At the present time, would you say your eyesight using both eyes (with glasses or contacts, if worn) is…",
+              "options": [
+                { "label": "Excellent", "value": 1 },
+                { "label": "Good", "value": 2 },
+                { "label": "Fair", "value": 3 },
+                { "label": "Poor", "value": 4 },
+                { "label": "Very poor", "value": 5 },
+                { "label": "Completely blind", "value": 6 }
+              ]
+            },
+            {
+              "id": "v5",
+              "label": "Do you accomplish less than you would like because of your vision?",
+              "options": [
+                { "label": "All of the time", "value": 1 },
+                { "label": "Most of the time", "value": 2 },
+                { "label": "Some of the time", "value": 3 },
+                { "label": "A little of the time", "value": 4 },
+                { "label": "None of the time", "value": 5 }
+              ]
+            },
+            {
+              "id": "v6",
+              "label": "I need a lot of help from others because of my eyesight.",
+              "options": [
+                { "label": "Definitely true", "value": 1 },
+                { "label": "Mostly true", "value": 2 },
+                { "label": "Not sure", "value": 3 },
+                { "label": "Mostly false", "value": 4 },
+                { "label": "Definitely false", "value": 5 }
+              ]
+            },
+            {
+              "id": "v7",
+              "label": "Because of your eyesight, how much difficulty do you have entertaining friends and family in your home?",
+              "options": [
+                { "label": "No difficulty at all", "value": 1 },
+                { "label": "A little difficulty", "value": 2 },
+                { "label": "Moderate difficulty", "value": 3 },
+                { "label": "Extreme difficulty", "value": 4 },
+                { "label": "Stopped because of eyesight", "value": 5 },
+                { "label": "Stopped for other reasons/not interested", "value": 6 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "scales": {
+    "SCALE_0_TO_4": [
+      { "label": "Never",     "value": 0 },
+      { "label": "Rarely",    "value": 1 },
+      { "label": "Sometimes", "value": 2 },
+      { "label": "Often",     "value": 3 },
+      { "label": "Always",    "value": 4 }
+    ],
+    "LSNS_0_TO_5": [
+      { "label": "None",           "value": 0 },
+      { "label": "One",            "value": 1 },
+      { "label": "Two",            "value": 2 },
+      { "label": "Three or four",  "value": 3 },
+      { "label": "Five to eight",  "value": 4 },
+      { "label": "Nine or more",   "value": 5 }
+    ],
+    "UCLA_1_TO_3": [
+      { "label": "Hardly ever",       "value": 1 },
+      { "label": "Some of the time",  "value": 2 },
+      { "label": "Often",             "value": 3 }
+    ]
+  },
+
+  "bands": {
+    "ageBands": [
+      { "min": -9999, "max": 55, "label": "Some/Lower" },
+      { "min": 56, "max": 70, "label": "Moderate" },
+      { "min": 71, "max": 80, "label": "High" },
+      { "min": 81, "max": 9999, "label": "Very High" }
+    ],
+    "bmiBands": [
+      { "min": -9999, "max": 20, "label": "Very High" },
+      { "min": 21, "max": 25, "label": "neutral" },
+      { "min": 26, "max": 28, "label": "some" },
+      { "min": 29, "max": 33, "label": "moderate" },
+      { "min": 34, "max": 40, "label": "high" },
+      { "min": 41, "max": 9999, "label": "very high" }
+    ],
+    "sleepBands": [
+      { "min": 0, "max": 5,  "label": "No significant sleep concerns" },
+      { "min": 6, "max": 11, "label": "Mild sleep disturbance" },
+      { "min": 12, "max": 17, "label": "Moderate sleep disturbance" },
+      { "min": 18, "max": 24, "label": "Severe sleep disturbance" }
+    ],
+    "stressBands": [
+      { "min": 0, "max": 5,  "label": "Low Stress" },
+      { "min": 6, "max": 10, "label": "Moderate Stress" },
+      { "min": 11, "max": 16, "label": "High Stress" }
+    ],
+    "lsnsBands": [
+      { "min": 0,  "max": 11, "label": "High risk of social isolation" },
+      { "min": 12, "max": 15, "label": "Moderate risk of social isolation" },
+      { "min": 16, "max": 30, "label": "Low risk (socially well-connected)" }
+    ],
+    "uclaBands": [
+      { "min": 3, "max": 4, "label": "Low loneliness" },
+      { "min": 5, "max": 6, "label": "Moderate loneliness" },
+      { "min": 7, "max": 9, "label": "High loneliness" }
+    ],
+    "hhiesBands": [
+      { "min": 0,  "max": 8,  "label": "Low Risk (0–8)" },
+      { "min": 10, "max": 24, "label": "Mild–Moderate Risk (10–24)" },
+      { "min": 26, "max": 40, "label": "Significant/High Risk (26–40) — Refer" }
+    ]
+  }
+}
