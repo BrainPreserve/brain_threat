@@ -1,17 +1,13 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "startCollapsed": true,
-  "ui": {
-    "categoryClearLabel": "Clear This Section",
-    "caretClosed": "▸",
-    "caretOpen": "▾"
-  },
+  "ui": { "categoryClearLabel": "Clear This Section", "caretClosed": "▸", "caretOpen": "▾" },
 
   "categories": [
     {
       "id": "personal",
       "title": "Personal Assessment",
-      "note": "Demographics and anthropometrics used to derive age and BMI tiers.",
+      "note": "Demographics and anthropometrics used for age/BMI tiers.",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -19,7 +15,7 @@
           "title": "Demographics",
           "type": "demographics",
           "items": [
-            { "key": "sex", "label": "Sex", "options": ["Female", "Male", "Other/Prefer not to say"] },
+            { "key": "sex", "label": "Sex", "options": ["Female","Male","Other/Prefer not to say"] },
             { "key": "age", "label": "Age (years)" }
           ],
           "bands": {
@@ -27,7 +23,7 @@
               { "min": -9999, "max": 55, "label": "Some/Lower" },
               { "min": 56, "max": 70, "label": "Moderate" },
               { "min": 71, "max": 80, "label": "High" },
-              { "min": 81, "max":  9999, "label": "Very High" }
+              { "min": 81, "max": 9999, "label": "Very High" }
             ]
           }
         },
@@ -36,10 +32,10 @@
           "title": "Anthropometrics (BMI)",
           "type": "bmi",
           "items": [
-            { "key": "units", "label": "Units", "options": ["US (lb, ft/in)", "Metric (kg, m)"] },
+            { "key": "units", "label": "Units", "options": ["US (lb, ft/in)","Metric (kg, m)"] },
             { "key": "height_ft", "label": "Height (ft)" },
             { "key": "height_in", "label": "Height (in)" },
-            { "key": "height_m",  "label": "Height (m)" },
+            { "key": "height_m", "label": "Height (m)" },
             { "key": "weight_lb", "label": "Weight (lb)" },
             { "key": "weight_kg", "label": "Weight (kg)" }
           ],
@@ -50,7 +46,7 @@
               { "min": 26, "max": 28, "label": "some" },
               { "min": 29, "max": 33, "label": "moderate" },
               { "min": 34, "max": 40, "label": "high" },
-              { "min": 41, "max":  9999, "label": "very high" }
+              { "min": 41, "max": 9999, "label": "very high" }
             ]
           }
         }
@@ -58,120 +54,9 @@
     },
 
     {
-      "id": "history_yn",
-      "title": "Medical & Lifestyle",
-      "note": "“Yes” flags the predefined risk tier.",
-      "clearLabel": "Clear This Section",
-      "instruments": [
-        {
-          "id": "history_flags",
-          "title": "History Flags",
-          "type": "yn_list",
-          "items": [
-            { "key": "heart",  "label": "Heart Disease",                                      "yesTier": "High" },
-            { "key": "hbp",    "label": "High Blood Pressure",                                "yesTier": "High" },
-            { "key": "dm",     "label": "Diabetes",                                           "yesTier": "High" },
-            { "key": "thy",    "label": "Thyroid Disease",                                    "yesTier": "Moderate" },
-            { "key": "ckd",    "label": "Kidney Disease",                                     "yesTier": "Moderate" },
-            { "key": "mood",   "label": "Depression/Anxiety or other Mental Health issue",    "yesTier": "Moderate" },
-            { "key": "smoke",  "label": "Smoking",                                            "yesTier": "High" },
-            { "key": "alc",    "label": "Alcohol (risky/excess use)",                         "yesTier": "Moderate" }
-          ]
-        }
-      ]
-    },
-
-    {
-      "id": "sleep",
-      "title": "Sleep",
-      "note": "Likert 0–4 per item; sum 0–24. Tiers: 0–5 none; 6–11 mild; 12–17 moderate; 18–24 severe.",
-      "clearLabel": "Clear This Section",
-      "instruments": [
-        {
-          "id": "sleep6",
-          "title": "Sleep Disturbance (6-item)",
-          "type": "likert",
-          "options": [
-            { "label": "Never", "value": 0 },
-            { "label": "Rarely", "value": 1 },
-            { "label": "Sometimes", "value": 2 },
-            { "label": "Often", "value": 3 },
-            { "label": "Always", "value": 4 }
-          ],
-          "items": [
-            { "key": "sleep1", "label": "Difficulty falling asleep" },
-            { "key": "sleep2", "label": "Wake during the night and can’t return to sleep" },
-            { "key": "sleep3", "label": "Wake too early and can’t return to sleep" },
-            { "key": "sleep4", "label": "Wake not feeling refreshed" },
-            { "key": "sleep5", "label": "Feel sleepy during the day" },
-            { "key": "sleep6", "label": "Take naps during the day" }
-          ],
-          "bands": [
-            { "min": 0,  "max": 5,  "label": "No significant sleep concerns" },
-            { "min": 6,  "max": 11, "label": "Mild sleep disturbance" },
-            { "min": 12, "max": 17, "label": "Moderate sleep disturbance" },
-            { "min": 18, "max": 24, "label": "Severe sleep disturbance" }
-          ]
-        }
-      ]
-    },
-
-    {
-      "id": "stress",
-      "title": "Stress",
-      "note": "Perceived stress (4 items). Items 2 & 3 are reverse-scored. Tiers: 0–5 low; 6–10 moderate; 11–16 high.",
-      "clearLabel": "Clear This Section",
-      "instruments": [
-        {
-          "id": "pss4",
-          "title": "Perceived Stress (4-item)",
-          "type": "likert",
-          "reverseKeys": ["stress2", "stress3"],
-          "options": [
-            { "label": "Never", "value": 0 },
-            { "label": "Rarely", "value": 1 },
-            { "label": "Sometimes", "value": 2 },
-            { "label": "Often", "value": 3 },
-            { "label": "Always", "value": 4 }
-          ],
-          "items": [
-            { "key": "stress1", "label": "Unable to control important things in life (past month)" },
-            { "key": "stress2", "label": "Felt confident about handling personal problems (past month)" },
-            { "key": "stress3", "label": "Felt that things were going your way (past month)" },
-            { "key": "stress4", "label": "Felt difficulties were piling up too high to overcome (past month)" }
-          ],
-          "bands": [
-            { "min": 0,  "max": 5,  "label": "Low Stress" },
-            { "min": 6,  "max": 10, "label": "Moderate Stress" },
-            { "min": 11, "max": 16, "label": "High Stress" }
-          ]
-        }
-      ]
-    },
-
-    {
-      "id": "activity",
-      "title": "Physical Activity",
-      "note": "“No” responses flag risk according to your predefined tiers.",
-      "clearLabel": "Clear This Section",
-      "instruments": [
-        {
-          "id": "activity_yn",
-          "title": "Activity Thresholds",
-          "type": "yn_list",
-          "items": [
-            { "key": "steps",    "label": "Walking/Steps ≥ 7,000 most days",              "noTier": "Moderate" },
-            { "key": "aerobic",  "label": "Moderate/High intensity ≥150/75 min per week", "noTier": "High" },
-            { "key": "strength", "label": "Strength training ≥ 2x per week",              "noTier": "High" }
-          ]
-        }
-      ]
-    },
-
-    {
       "id": "social",
       "title": "Social & Loneliness",
-      "note": "LSNS-6 (0–30; lower = worse) and UCLA-3 (3–9; higher = worse).",
+      "note": "LSNS-6 (0–30; lower=worse), UCLA-3 (3–9; higher=worse).",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
@@ -180,25 +65,25 @@
           "type": "radio",
           "itemPrefix": "lsns",
           "options": [
-            { "label": "None",           "value": 0 },
-            { "label": "One",            "value": 1 },
-            { "label": "Two",            "value": 2 },
-            { "label": "Three or four",  "value": 3 },
-            { "label": "Five to eight",  "value": 4 },
-            { "label": "Nine or more",   "value": 5 }
+            { "label": "None", "value": 0 },
+            { "label": "One", "value": 1 },
+            { "label": "Two", "value": 2 },
+            { "label": "Three or four", "value": 3 },
+            { "label": "Five to eight", "value": 4 },
+            { "label": "Nine or more", "value": 5 }
           ],
           "items": [
-            { "key": "lsns1", "label": "How many RELATIVES do you see or hear from at least once a month?" },
-            { "key": "lsns2", "label": "How many RELATIVES do you feel at ease with to talk about private matters?" },
-            { "key": "lsns3", "label": "How many RELATIVES could you call on for help?" },
-            { "key": "lsns4", "label": "How many FRIENDS do you see or hear from at least once a month?" },
-            { "key": "lsns5", "label": "How many FRIENDS do you feel at ease with to talk about private matters?" },
-            { "key": "lsns6", "label": "How many FRIENDS could you call on for help?" }
+            { "key": "lsns1", "label": "Relatives seen/heard ≥ monthly" },
+            { "key": "lsns2", "label": "Relatives for private matters" },
+            { "key": "lsns3", "label": "Relatives you can call for help" },
+            { "key": "lsns4", "label": "Friends seen/heard ≥ monthly" },
+            { "key": "lsns5", "label": "Friends for private matters" },
+            { "key": "lsns6", "label": "Friends you can call for help" }
           ],
           "bands": [
-            { "min": 0,  "max": 11, "label": "High risk of social isolation" },
+            { "min": 0, "max": 11, "label": "High risk of social isolation" },
             { "min": 12, "max": 15, "label": "Moderate risk of social isolation" },
-            { "min": 16, "max": 30, "label": "Low risk (socially well-connected)" }
+            { "min": 16, "max": 30, "label": "Low risk (well-connected)" }
           ]
         },
         {
@@ -207,14 +92,14 @@
           "type": "radio",
           "itemPrefix": "ucla",
           "options": [
-            { "label": "Hardly ever",      "value": 1 },
+            { "label": "Hardly ever", "value": 1 },
             { "label": "Some of the time", "value": 2 },
-            { "label": "Often",            "value": 3 }
+            { "label": "Often", "value": 3 }
           ],
           "items": [
-            { "key": "ucla1", "label": "How often do you feel that you lack companionship?" },
-            { "key": "ucla2", "label": "How often do you feel left out?" },
-            { "key": "ucla3", "label": "How often do you feel isolated from others?" }
+            { "key": "ucla1", "label": "Lack companionship" },
+            { "key": "ucla2", "label": "Feel left out" },
+            { "key": "ucla3", "label": "Feel isolated" }
           ],
           "bands": [
             { "min": 3, "max": 4, "label": "Low loneliness" },
@@ -227,31 +112,31 @@
 
     {
       "id": "sensory",
-      "title": "Sensory",
-      "note": "Hearing (HHIE-S, 10 items; 0–40, higher = worse) and Vision (VFQ-3of7; 0–100, higher = better; routing uses 3 of 7).",
+      "title": "Sensory Assessment",
+      "note": "HHIE-S (0–40; higher=worse) and VFQ-3of7 (0–100; higher=better).",
       "clearLabel": "Clear This Section",
       "instruments": [
         {
           "id": "hhies",
-          "title": "Hearing (HHIE-S)",
+          "title": "Hearing (HHIE-S, 10 items)",
           "type": "radio",
           "itemPrefix": "h",
           "options": [
-            { "label": "Yes",       "value": 4 },
+            { "label": "Yes", "value": 4 },
             { "label": "Sometimes", "value": 2 },
-            { "label": "No",        "value": 0 }
+            { "label": "No", "value": 0 }
           ],
           "items": [
-            { "key": "h1",  "label": "Does a hearing problem cause you to feel embarrassed when meeting new people?" },
-            { "key": "h2",  "label": "Does a hearing problem cause you to feel frustrated when talking to members of your family?" },
-            { "key": "h3",  "label": "Do you have difficulty hearing when someone speaks in a whisper?" },
-            { "key": "h4",  "label": "Do you feel handicapped by a hearing problem?" },
-            { "key": "h5",  "label": "Does a hearing problem cause you difficulty when visiting friends, relatives or neighbors?" },
-            { "key": "h6",  "label": "Does a hearing problem cause you to attend religious services less often than you would like?" },
-            { "key": "h7",  "label": "Does a hearing problem cause you to have arguments with family members?" },
-            { "key": "h8",  "label": "Does a hearing problem cause you difficulty when listening to TV or radio?" },
-            { "key": "h9",  "label": "Do you feel that any difficulty with your hearing limits or hampers your personal or social life?" },
-            { "key": "h10", "label": "Does a hearing problem cause you difficulty when in a restaurant with relatives or friends?" }
+            { "key": "h1", "label": "Embarrassed meeting new people" },
+            { "key": "h2", "label": "Frustrated talking to family" },
+            { "key": "h3", "label": "Difficulty hearing whispers" },
+            { "key": "h4", "label": "Feel handicapped by hearing problem" },
+            { "key": "h5", "label": "Difficulty visiting others" },
+            { "key": "h6", "label": "Attend religious services less often" },
+            { "key": "h7", "label": "Arguments with family members" },
+            { "key": "h8", "label": "Difficulty listening to TV/radio" },
+            { "key": "h9", "label": "Hearing limits social life" },
+            { "key": "h10","label": "Difficulty in restaurants" }
           ],
           "bands": [
             { "min": 0,  "max": 8,  "label": "Low Risk (0–8)" },
@@ -264,95 +149,175 @@
           "title": "Vision (VFQ-3of7)",
           "type": "radio",
           "itemPrefix": "v",
-          "note": "All seven inputs are shown; app routing selects 3 of 7 to compute the validated score.",
+          "note": "All seven inputs collected; scoring uses 3-of-7 per your WP logic.",
           "items": [
-            {
-              "key": "v1",
-              "label": "Are you limited in the kinds of things you can do because of your vision?",
-              "options": [
-                { "label": "All of the time",     "value": 1 },
-                { "label": "Most of the time",    "value": 2 },
-                { "label": "Some of the time",    "value": 3 },
-                { "label": "A little of the time","value": 4 },
-                { "label": "None of the time",    "value": 5 }
-              ]
-            },
-            {
-              "key": "v2",
-              "label": "Wearing glasses, how much difficulty do you have reading small print (e.g., medicine bottle, legal forms)?",
-              "options": [
-                { "label": "No difficulty at all",                  "value": 1 },
-                { "label": "A little difficulty",                   "value": 2 },
-                { "label": "Moderate difficulty",                   "value": 3 },
-                { "label": "Extreme difficulty",                    "value": 4 },
-                { "label": "Stopped because of eyesight",           "value": 5 },
-                { "label": "Stopped for other reasons/not interested","value": 6 }
-              ]
-            },
-            {
-              "key": "v3",
-              "label": "Because of your eyesight, how much difficulty do you have seeing how people react to things you say?",
-              "options": [
-                { "label": "No difficulty at all",                  "value": 1 },
-                { "label": "A little difficulty",                   "value": 2 },
-                { "label": "Moderate difficulty",                   "value": 3 },
-                { "label": "Extreme difficulty",                    "value": 4 },
-                { "label": "Stopped because of eyesight",           "value": 5 },
-                { "label": "Stopped for other reasons/not interested","value": 6 }
-              ]
-            },
-            {
-              "key": "v4",
-              "label": "At the present time, would you say your eyesight using both eyes (with glasses or contacts, if worn) is…",
-              "options": [
-                { "label": "Excellent", "value": 1 },
-                { "label": "Good",      "value": 2 },
-                { "label": "Fair",      "value": 3 },
-                { "label": "Poor",      "value": 4 },
-                { "label": "Very poor", "value": 5 },
-                { "label": "Completely blind", "value": 6 }
-              ]
-            },
-            {
-              "key": "v5",
-              "label": "Do you accomplish less than you would like because of your vision?",
-              "options": [
-                { "label": "All of the time",     "value": 1 },
-                { "label": "Most of the time",    "value": 2 },
-                { "label": "Some of the time",    "value": 3 },
-                { "label": "A little of the time","value": 4 },
-                { "label": "None of the time",    "value": 5 }
-              ]
-            },
-            {
-              "key": "v6",
-              "label": "I need a lot of help from others because of my eyesight.",
-              "options": [
-                { "label": "Definitely true", "value": 1 },
-                { "label": "Mostly true",     "value": 2 },
-                { "label": "Not sure",        "value": 3 },
-                { "label": "Mostly false",    "value": 4 },
-                { "label": "Definitely false","value": 5 }
-              ]
-            },
-            {
-              "key": "v7",
-              "label": "Because of your eyesight, how much difficulty do you have entertaining friends and family in your home?",
-              "options": [
-                { "label": "No difficulty at all",                  "value": 1 },
-                { "label": "A little difficulty",                   "value": 2 },
-                { "label": "Moderate difficulty",                   "value": 3 },
-                { "label": "Extreme difficulty",                    "value": 4 },
-                { "label": "Stopped because of eyesight",           "value": 5 },
-                { "label": "Stopped for other reasons/not interested","value": 6 }
-              ]
-            }
+            { "key": "v1", "label": "Limited in activities because of vision?", "options": [ {"label":"All of the time","value":1},{"label":"Most of the time","value":2},{"label":"Some of the time","value":3},{"label":"A little of the time","value":4},{"label":"None of the time","value":5} ] },
+            { "key": "v2", "label": "Difficulty reading small print (with glasses)?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] },
+            { "key": "v3", "label": "Difficulty seeing others’ reactions?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] },
+            { "key": "v4", "label": "Overall eyesight (both eyes with correction)?", "options": [ {"label":"Excellent","value":1},{"label":"Good","value":2},{"label":"Fair","value":3},{"label":"Poor","value":4},{"label":"Very poor","value":5},{"label":"Completely blind","value":6} ] },
+            { "key": "v5", "label": "Accomplish less because of vision?", "options": [ {"label":"All of the time","value":1},{"label":"Most","value":2},{"label":"Some","value":3},{"label":"A little","value":4},{"label":"None","value":5} ] },
+            { "key": "v6", "label": "Need a lot of help due to eyesight?", "options": [ {"label":"Definitely true","value":1},{"label":"Mostly true","value":2},{"label":"Not sure","value":3},{"label":"Mostly false","value":4},{"label":"Definitely false","value":5} ] },
+            { "key": "v7", "label": "Difficulty entertaining at home due to eyesight?", "options": [ {"label":"No difficulty","value":1},{"label":"A little","value":2},{"label":"Moderate","value":3},{"label":"Extreme","value":4},{"label":"Stopped due to eyesight","value":5},{"label":"Stopped other/not interested","value":6} ] }
           ],
           "bands": [
             { "min": 0,  "max": 54.9, "label": "Severe (<55)" },
             { "min": 55, "max": 69.9, "label": "Moderate (55–69)" },
             { "min": 70, "max": 84.9, "label": "Mild (70–84)" },
             { "min": 85, "max": 100,  "label": "Minimal/none (≥85)" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "medications",
+      "title": "Medication Threat Assessment",
+      "note": "Select recognized medications/classes; current use carries class risk as in WP build.",
+      "clearLabel": "Clear This Section",
+      "instruments": [
+        {
+          "id": "med_threat_classes",
+          "title": "Medication Classes",
+          "type": "medications",
+          "classes": [
+            {
+              "class": "First-Gen Antihistamines (strong anticholinergic)",
+              "baseRisk": 4,
+              "meds": ["diphenhydramine","doxylamine","dimenhydrinate","meclizine","chlorpheniramine","brompheniramine","clemastine"]
+            },
+            {
+              "class": "Tricyclics / Strong Anticholinergic Antidepressants",
+              "baseRisk": 4,
+              "meds": ["amitriptyline","doxepin","paroxetine"]
+            },
+            {
+              "class": "Antipsychotics",
+              "baseRisk": 3,
+              "meds": ["chlorpromazine","haloperidol","olanzapine","quetiapine","risperidone"]
+            },
+            {
+              "class": "Benzodiazepines",
+              "baseRisk": 3,
+              "meds": ["alprazolam","clonazepam","diazepam","lorazepam","oxazepam"]
+            },
+            {
+              "class": "H2 blockers",
+              "baseRisk": 2,
+              "meds": ["cimetidine","famotidine"]
+            },
+            {
+              "class": "Mood stabilizers/antiepileptics",
+              "baseRisk": 2,
+              "meds": ["carbamazepine","divalproex","valproate","mirtazapine","citalopram","escitalopram","sertraline"]
+            }
+          ],
+          "statusOptions": [
+            { "label": "No / Never used", "value": 0 },
+            { "label": "Taken in the past", "value": 1 },
+            { "label": "Currently taking", "value": 2 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "plastics",
+      "title": "Micro/Nanoplastic Exposure Assessment",
+      "note": "0–3 frequency × per-item weight; total mapped to risk tier (Low/Moderate/High/Very High) as in WP.",
+      "clearLabel": "Clear This Section",
+      "instruments": [
+        {
+          "id": "microplastics_weighted",
+          "title": "Exposure Sources",
+          "type": "weighted_select",
+          "scale": [
+            { "label": "Never (0)", "value": 0 },
+            { "label": "Occasionally – monthly or less (1)", "value": 1 },
+            { "label": "Regularly – weekly (2)", "value": 2 },
+            { "label": "Frequently – daily (3)", "value": 3 }
+          ],
+          "items": [
+            { "key": "packaging",  "label": "Food & Beverage Packaging", "weight": 3 },
+            { "key": "kitchen",    "label": "Kitchen & Cooking Tools",   "weight": 2 },
+            { "key": "homegoods",  "label": "Home Goods, Furniture & Toys", "weight": 2 },
+            { "key": "textiles",   "label": "Textiles / Laundry / Microfibers", "weight": 2 },
+            { "key": "dust",       "label": "Indoor Dust / Airborne Particulates", "weight": 1 }
+          ],
+          "bandsPct": [
+            { "min": 0,  "max": 24, "label": "Low" },
+            { "min": 25, "max": 49, "label": "Moderate" },
+            { "min": 50, "max": 74, "label": "High" },
+            { "min": 75, "max": 100,"label": "Very High" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "foods",
+      "title": "Brain Threat Foods & Additives Assessment",
+      "note": "0–3 frequency × weight; larger weights for processed meats, sugar-sweetened beverages, etc.",
+      "clearLabel": "Clear This Section",
+      "instruments": [
+        {
+          "id": "bt_foods",
+          "title": "Dietary Items",
+          "type": "weighted_select",
+          "scale": [
+            { "label": "Rarely/Never (0)", "value": 0 },
+            { "label": "Occasionally (monthly or less) (1)", "value": 1 },
+            { "label": "Frequently (weekly) (2)", "value": 2 },
+            { "label": "Regularly (daily) (3)", "value": 3 }
+          ],
+          "items": [
+            { "key": "processed_meats", "label": "Processed meats (nitrates/nitrites, deli meats, bacon, hot dogs)", "weight": 1.5 },
+            { "key": "fried_fast",      "label": "Fried/Fast foods",                                               "weight": 1.5 },
+            { "key": "sugary_drinks",   "label": "Sugar-sweetened beverages",                                      "weight": 1.5 },
+            { "key": "sweets_snacks",   "label": "Sweets, pastries, candy",                                        "weight": 1.0 },
+            { "key": "refined_grains",  "label": "Refined grains / white flour products",                           "weight": 0.5 },
+            { "key": "trans_fats",      "label": "Trans-fat or partially hydrogenated oils",                        "weight": 1.0 },
+            { "key": "msg",             "label": "Monosodium glutamate (MSG)",                                      "weight": 0.5 },
+            { "key": "artificial_flavors","label": "Artificial flavors/colors/sweeteners (diet sodas, candies)",   "weight": 0.5 },
+            { "key": "excess_salt",     "label": "Excess added salt/salty snacks",                                  "weight": 0.5 }
+          ],
+          "bandsPct": [
+            { "min": 0,  "max": 24, "label": "Low" },
+            { "min": 25, "max": 49, "label": "Moderate" },
+            { "min": 50, "max": 74, "label": "High" },
+            { "min": 75, "max": 100,"label": "Very High" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "toxins",
+      "title": "Toxin Exposure Assessment",
+      "note": "0–3 frequency across five exposure domains; sum → tier as in WP.",
+      "clearLabel": "Clear This Section",
+      "instruments": [
+        {
+          "id": "toxins_weighted",
+          "title": "Exposure Domains",
+          "type": "weighted_select",
+          "scale": [
+            { "label": "Never / Not applicable — 0", "value": 0 },
+            { "label": "Occasionally (few/yr) — 1", "value": 1 },
+            { "label": "Regularly (monthly) — 2",   "value": 2 },
+            { "label": "Frequently (wkly/daily) — 3","value": 3 }
+          ],
+          "items": [
+            { "key": "water",  "label": "Drinking / Tap Water (unfiltered/old pipes)",             "weight": 1 },
+            { "key": "metals", "label": "Heavy metals (food/environment)",                          "weight": 1 },
+            { "key": "pestic", "label": "Pesticides/Herbicides (home/garden/occupational)",         "weight": 1 },
+            { "key": "solv",   "label": "Solvents/VOCs (paints, cleaners, off-gassing, garages)",   "weight": 1 },
+            { "key": "mold",   "label": "Mold/moisture damage or poor ventilation",                 "weight": 1 }
+          ],
+          "bandsPct": [
+            { "min": 0,  "max": 24, "label": "Low" },
+            { "min": 25, "max": 49, "label": "Moderate" },
+            { "min": 50, "max": 74, "label": "High" },
+            { "min": 75, "max": 100,"label": "Very High" }
           ]
         }
       ]
