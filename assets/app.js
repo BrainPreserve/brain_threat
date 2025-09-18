@@ -4,7 +4,7 @@
    - Renders questionnaires (config-driven)
    - Tracks answers; computes scores; builds summaries
    - Wires Copy and Clear buttons (per-section + global) with guaranteed re-collapse
-   - Accordions default CLOSED unless config explicitly sets startCollapsed === false
+   - HARD GUARANTEE: Accordions start CLOSED and re-collapse on both clear buttons
 */
 (function(){
   // -----------------------------
@@ -121,15 +121,22 @@
   function toNum(v){ const n = Number(v); return isNaN(n) ? null : n; }
 
   // -----------------------------
-  // Collapse helpers
+  // Collapse helpers (hard)
   // -----------------------------
   function recollapseAll(){
-    document.querySelectorAll('details.bt-acc[open]').forEach(d => d.removeAttribute('open'));
+    document.querySelectorAll('details.bt-acc').forEach(d => d.removeAttribute('open'));
   }
   function recollapseSection(sectionId){
     const card = document.querySelector(`section[data-section="${sectionId}"]`);
     if (!card) return;
-    card.querySelectorAll('details.bt-acc[open]').forEach(d => d.removeAttribute('open'));
+    card.querySelectorAll('details.bt-acc').forEach(d => d.removeAttribute('open'));
+  }
+  // Call recollapse multiple times across frames to beat any async “open” toggles
+  function recollapseNowAndSoon(){
+    recollapseAll();
+    requestAnimationFrame(()=> recollapseAll());
+    setTimeout(recollapseAll, 0);
+    setTimeout(recollapseAll, 50);
   }
 
   // -----------------------------
@@ -175,8 +182,9 @@
       if (heightM)  heightM.style.display = "none";
       if (weightKG) weightKG.style.display = "none";
     }
-    // Re-collapse after clearing
+    // Hard re-collapse after clearing
     recollapseSection(sectionId);
+    requestAnimationFrame(()=> recollapseSection(sectionId));
   }
 
   // -----------------------------
@@ -300,14 +308,13 @@
     mount.appendChild(grid);
   }
 
-  // FIXED: now supports item.options → sub.options_ref → sub.options
+  // Supports item.options → sub.options_ref → sub.options (VFQ fix)
   function render_radio_group(sub, mount, targetObj){
     const grid = el("div", { class:"bt-grid" });
     (sub.items||[]).forEach(item => {
       const name = `${sub.id}__${item.id}`;
       const row = el("div", { class:"bt-row" }, el("div", { class:"bt-note" }, item.label));
 
-      // Priority: item.options (e.g., VFQ-3of7) → sub.options_ref (e.g., LSNS/UCLA) → sub.options (e.g., HHIE)
       let opts = [];
       if (Array.isArray(item.options) && item.options.length){
         opts = item.options;
@@ -351,10 +358,8 @@
     clearNode(mount);
 
     (section.subsections||[]).forEach(sub => {
-      // Default CLOSED unless startCollapsed === false
-      const openInitial = (window.BT_CFG && window.BT_CFG.app && window.BT_CFG.app.startCollapsed === false) ? true : false;
+      // Always create CLOSED accordions (never set "open" here)
       const wrapper = el("details", { class:"bt-acc" });
-      if (openInitial) wrapper.setAttribute("open",""); // only open if explicitly allowed
       const sum = el("summary", {}, caret(), " ",
         sub.id === "demographics"     ? "Demographics" :
         sub.id === "history_yesno"    ? "Medical History & Lifestyle" :
@@ -395,7 +400,7 @@
         onClick: () => {
           resetSectionState(section.id);
           resetSectionUI(section.id);
-          onChange(); // refresh summary after clear
+          onChange();
         }
       }, "Clear This Section")
     );
@@ -482,8 +487,8 @@
           if (heightM)  heightM.style.display = "none";
           if (weightKG) weightKG.style.display = "none";
         }
-        // Re-collapse all categories
-        recollapseAll();
+        // HARD re-collapse
+        recollapseNowAndSoon();
         // Reset summary text
         renderSummaryBox((window.BT_CFG?.copy?.summaryEmpty) || "Complete the sections to see a personalized summary here.");
       });
@@ -503,9 +508,8 @@
         renderSection(section);
       }
 
-      // Start collapsed by default unless explicitly disabled
-      const startCollapsed = !(window.BT_CFG && window.BT_CFG.app && window.BT_CFG.app.startCollapsed === false);
-      if (startCollapsed) recollapseAll();
+      // HARD guarantee: collapse immediately and across frames
+      recollapseNowAndSoon();
 
       renderSummaryBox((window.BT_CFG?.copy?.summaryEmpty) || "Complete the sections to see a personalized summary here.");
       wireButtons();
