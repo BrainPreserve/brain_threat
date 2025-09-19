@@ -1,499 +1,107 @@
 {
-  "categories": [
-    {
-      "key": "personal",
-      "title": "Personal Assessment",
-      "instruments": [
-        {
-          "key": "demographics",
-          "title": "Demographics & BMI",
-          "type": "demographics",
-          "fields": {
-            "age": { "key": "age", "label": "Age (years)" },
-            "sex": {
-              "key": "sex",
-              "label": "Sex",
-              "options": [
-                { "value": "M", "label": "Male" },
-                { "value": "F", "label": "Female" }
-              ]
-            },
-            "height": { "key": "height_cm", "label": "Height (cm)" },
-            "weight": { "key": "weight_kg", "label": "Weight (kg)" }
-          },
-          "ageBands": [
-            { "max": 55, "label": "Some/Lower", "level": "Some/Lower" },
-            { "min": 56, "max": 70, "label": "Moderate", "level": "Moderate" },
-            { "min": 71, "max": 80, "label": "High", "level": "High" },
-            { "min": 81, "label": "Very High", "level": "Very High" }
-          ],
-          "bmiBands": [
-            { "max": 20, "label": "Very High", "level": "Very High" },
-            { "min": 21, "max": 25, "label": "Some/Lower", "level": "Some/Lower" },
-            { "min": 26, "max": 28, "label": "Some", "level": "Some/Lower" },
-            { "min": 29, "max": 33, "label": "Moderate", "level": "Moderate" },
-            { "min": 34, "max": 40, "label": "High", "level": "High" },
-            { "min": 41, "label": "Very High", "level": "Very High" }
-          ]
-        },
-        {
-          "key": "history_yn",
-          "title": "Medical & Lifestyle (Y/N)",
-          "type": "yn_list",
-          "items": [
-            { "key": "heart",  "label": "Heart disease",           "csvKey": "heart"  },
-            { "key": "hbp",    "label": "Hypertension",            "csvKey": "hbp"    },
-            { "key": "dm",     "label": "Diabetes",                "csvKey": "dm"     },
-            { "key": "thy",    "label": "Thyroid disorder",        "csvKey": "thy"    },
-            { "key": "ckd",    "label": "Chronic kidney disease",  "csvKey": "ckd"    },
-            { "key": "mood",   "label": "Mood disorder",           "csvKey": "mood"   },
-            { "key": "smoke",  "label": "Tobacco use",             "csvKey": "smoke"  },
-            { "key": "alc",    "label": "Alcohol use",             "csvKey": "alc"    }
-          ]
-        },
-        {
-          "key": "sleep",
-          "title": "Sleep (6 items; 0–4 Likert)",
-          "type": "likert",
-          "likert": {
-            "scaleMax": 4,
-            "bands": [
-              { "max": 5,  "label": "No significant sleep concerns", "level": "Some/Lower" },
-              { "min": 6,  "max": 11, "label": "Mild sleep concerns",     "level": "Moderate"   },
-              { "min": 12, "max": 17, "label": "Moderate sleep concerns",  "level": "High"       },
-              { "min": 18,             "label": "Severe sleep concerns",   "level": "Very High"  }
-            ]
-          },
-          "items": [
-            { "key": "sleep1", "csvKey": "sleep1" },
-            { "key": "sleep2", "csvKey": "sleep2" },
-            { "key": "sleep3", "csvKey": "sleep3" },
-            { "key": "sleep4", "csvKey": "sleep4" },
-            { "key": "sleep5", "csvKey": "sleep5" },
-            { "key": "sleep6", "csvKey": "sleep6" }
-          ]
-        },
-        {
-          "key": "stress",
-          "title": "Stress (PSS-4; items 2 & 3 reverse)",
-          "type": "likert",
-          "likert": {
-            "scaleMax": 4,
-            "bands": [
-              { "max": 5,  "label": "Low",      "level": "Some/Lower" },
-              { "min": 6,  "max": 10, "label": "Moderate", "level": "Moderate"   },
-              { "min": 11,            "label": "High",     "level": "High"       }
-            ]
-          },
-          "items": [
-            { "key": "stress1", "csvKey": "stress1" },
-            { "key": "stress2", "csvKey": "stress2", "reverse": true },
-            { "key": "stress3", "csvKey": "stress3", "reverse": true },
-            { "key": "stress4", "csvKey": "stress4" }
-          ]
-        },
-        {
-          "key": "activity",
-          "title": "Physical Activity (Y/N thresholds)",
-          "type": "yn_list",
-          "items": [
-            { "key": "steps",    "label": "Steps target met",        "csvKey": "steps"    },
-            { "key": "aerobic",  "label": "Aerobic minutes met",     "csvKey": "aerobic"  },
-            { "key": "strength", "label": "Strength sessions met",   "csvKey": "strength" }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "social",
-      "title": "Social & Loneliness (LSNS-6; UCLA-3)",
-      "instruments": [
-        {
-          "key": "lsns6",
-          "title": "Social Networks (LSNS-6)",
-          "type": "likert",
-          "likert": {
-            "scaleMax": 5,
-            "bands": [
-              { "max": 11, "label": "High isolation risk",     "level": "High"       },
-              { "min": 12, "max": 15, "label": "Moderate risk", "level": "Moderate"   },
-              { "min": 16,            "label": "Low risk",      "level": "Some/Lower" }
-            ]
-          },
-          "items": [
-            { "key": "lsns1", "csvKey": "lsns1" },
-            { "key": "lsns2", "csvKey": "lsns2" },
-            { "key": "lsns3", "csvKey": "lsns3" },
-            { "key": "lsns4", "csvKey": "lsns4" },
-            { "key": "lsns5", "csvKey": "lsns5" },
-            { "key": "lsns6", "csvKey": "lsns6" }
-          ]
-        },
-        {
-          "key": "ucla3",
-          "title": "Loneliness (UCLA-3)",
-          "type": "likert",
-          "likert": {
-            "scaleMax": 3,
-            "bands": [
-              { "min": 3, "max": 4, "label": "Low",      "level": "Some/Lower" },
-              { "min": 5, "max": 6, "label": "Moderate", "level": "Moderate"   },
-              { "min": 7,           "label": "High",     "level": "High"       }
-            ]
-          },
-          "items": [
-            { "key": "ucla1", "csvKey": "ucla1" },
-            { "key": "ucla2", "csvKey": "ucla2" },
-            { "key": "ucla3", "csvKey": "ucla3" }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "sensory",
-      "title": "Sensory Assessment",
-      "subAccordions": [
-        {
-          "key": "hearing",
-          "title": "Hearing — HHIE-S",
-          "instruments": [
-            {
-              "key": "hhies",
-              "title": "HHIE-S (10 items)",
-              "type": "likert",
-              "likert": {
-                "scale": [0, 2, 4],
-                "scaleMax": 4,
-                "bands": [
-                  { "max": 8,  "label": "Low handicap",        "level": "Some/Lower" },
-                  { "min": 10, "max": 24, "label": "Mild–Moderate",     "level": "Moderate"   },
-                  { "min": 26,            "label": "Significant handicap","level": "High"      }
-                ]
-              },
-              "items": [
-                { "key": "h1",  "csvKey": "h1"  },
-                { "key": "h2",  "csvKey": "h2"  },
-                { "key": "h3",  "csvKey": "h3"  },
-                { "key": "h4",  "csvKey": "h4"  },
-                { "key": "h5",  "csvKey": "h5"  },
-                { "key": "h6",  "csvKey": "h6"  },
-                { "key": "h7",  "csvKey": "h7"  },
-                { "key": "h8",  "csvKey": "h8"  },
-                { "key": "h9",  "csvKey": "h9"  },
-                { "key": "h10", "csvKey": "h10" }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "vision",
-          "title": "Vision — VFQ-3of7",
-          "instruments": [
-            {
-              "key": "vfq7",
-              "title": "VFQ-3of7 (7 items)",
-              "type": "likert",
-              "likert": {
-                "scale": [1, 2, 3, 4, 5],
-                "scaleMax": 5,
-                "bands": [
-                  { "max": 54, "label": "Severe",        "level": "Very High"  },
-                  { "min": 55, "max": 69, "label": "Moderate",      "level": "Moderate"   },
-                  { "min": 70, "max": 84, "label": "Mild",          "level": "Some/Lower" },
-                  { "min": 85,            "label": "Minimal/none",  "level": "Some/Lower" }
-                ]
-              },
-              "items": [
-                { "key": "v1", "csvKey": "v1" },
-                { "key": "v2", "csvKey": "v2" },
-                { "key": "v3", "csvKey": "v3" },
-                { "key": "v4", "csvKey": "v4" },
-                { "key": "v5", "csvKey": "v5" },
-                { "key": "v6", "csvKey": "v6" },
-                { "key": "v7", "csvKey": "v7" }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "meds",
-      "title": "Medication Threat Assessment",
-      "instruments": [
-        {
-          "key": "medications",
-          "title": "Medication Checklist",
-          "type": "medications",
-          "bands": [
-            { "max": 2, "label": "Lower",   "level": "Some/Lower" },
-            { "min": 3, "max": 6, "label": "Moderate", "level": "Moderate"   },
-            { "min": 7,            "label": "High",     "level": "High"       }
-          ],
-          "classes": [
-            {
-              "key": "antacid",
-              "title": "OTC Antacids",
-              "meds": [
-                { "key": "cimetidine", "label": "Cimetidine", "csvKey": "cimetidine", "weight": 2 },
-                { "key": "famotidine", "label": "Famotidine", "csvKey": "famotidine", "weight": 1 }
-              ]
-            },
-            {
-              "key": "anti_seizure",
-              "title": "Anti-Seizure",
-              "meds": [
-                { "key": "carbamazepine", "label": "Carbamazepine", "csvKey": "carbamazepine", "weight": 2 },
-                { "key": "divalproex",    "label": "Divalproex",    "csvKey": "divalproex",    "weight": 2 },
-                { "key": "valproate",     "label": "Valproate",     "csvKey": "valproate",     "weight": 2 }
-              ]
-            },
-            {
-              "key": "antidepressant",
-              "title": "Antidepressants",
-              "meds": [
-                { "key": "amitriptyline", "label": "Amitriptyline", "csvKey": "amitriptyline", "weight": 4 },
-                { "key": "doxepin",       "label": "Doxepin",       "csvKey": "doxepin",       "weight": 4 },
-                { "key": "paroxetine",    "label": "Paroxetine",    "csvKey": "paroxetine",    "weight": 3 },
-                { "key": "mirtazapine",   "label": "Mirtazapine",   "csvKey": "mirtazapine",   "weight": 2 },
-                { "key": "citalopram",    "label": "Citalopram",    "csvKey": "citalopram",    "weight": 1 },
-                { "key": "escitalopram",  "label": "Escitalopram",  "csvKey": "escitalopram",  "weight": 1 },
-                { "key": "sertraline",    "label": "Sertraline",    "csvKey": "sertraline",    "weight": 1 }
-              ]
-            },
-            {
-              "key": "antihistamine",
-              "title": "Antihistamines",
-              "meds": [
-                { "key": "brompheniramine",  "label": "Brompheniramine",  "csvKey": "brompheniramine",  "weight": 4 },
-                { "key": "chlorpheniramine", "label": "Chlorpheniramine", "csvKey": "chlorpheniramine", "weight": 4 },
-                { "key": "clemastine",       "label": "Clemastine",       "csvKey": "clemastine",       "weight": 4 },
-                { "key": "dimenhydrinate",   "label": "Dimenhydrinate",   "csvKey": "dimenhydrinate",   "weight": 4 },
-                { "key": "diphenhydramine",  "label": "Diphenhydramine",  "csvKey": "diphenhydramine",  "weight": 4 },
-                { "key": "doxylamine",       "label": "Doxylamine",       "csvKey": "doxylamine",       "weight": 4 },
-                { "key": "meclizine",        "label": "Meclizine",        "csvKey": "meclizine",        "weight": 4 }
-              ]
-            },
-            {
-              "key": "anticholinergic_parkinson",
-              "title": "Anticholinergics for Parkinson’s",
-              "meds": [
-                { "key": "benztropine",     "label": "Benztropine",     "csvKey": "benztropine",     "weight": 4 },
-                { "key": "trihexyphenidyl", "label": "Trihexyphenidyl", "csvKey": "trihexyphenidyl", "weight": 4 }
-              ]
-            },
-            {
-              "key": "antipsychotic",
-              "title": "Antipsychotics",
-              "meds": [
-                { "key": "chlorpromazine", "label": "Chlorpromazine", "csvKey": "chlorpromazine", "weight": 3 },
-                { "key": "haloperidol",    "label": "Haloperidol",    "csvKey": "haloperidol",    "weight": 3 },
-                { "key": "olanzapine",     "label": "Olanzapine",     "csvKey": "olanzapine",     "weight": 3 },
-                { "key": "quetiapine",     "label": "Quetiapine",     "csvKey": "quetiapine",     "weight": 3 },
-                { "key": "risperidone",    "label": "Risperidone",    "csvKey": "risperidone",    "weight": 3 }
-              ]
-            },
-            {
-              "key": "benzodiazepine",
-              "title": "Benzodiazepines",
-              "meds": [
-                { "key": "alprazolam", "label": "Alprazolam", "csvKey": "alprazolam", "weight": 3 },
-                { "key": "clonazepam", "label": "Clonazepam", "csvKey": "clonazepam", "weight": 3 },
-                { "key": "diazepam",   "label": "Diazepam",   "csvKey": "diazepam",   "weight": 3 },
-                { "key": "lorazepam",  "label": "Lorazepam",  "csvKey": "lorazepam",  "weight": 3 },
-                { "key": "oxazepam",   "label": "Oxazepam",   "csvKey": "oxazepam",   "weight": 3 }
-              ]
-            },
-            {
-              "key": "calcium_channel_blocker",
-              "title": "Calcium Channel Blocker",
-              "meds": [
-                { "key": "felodipine", "label": "Felodipine", "csvKey": "felodipine", "weight": 1 }
-              ]
-            },
-            {
-              "key": "barbiturate",
-              "title": "Barbiturate",
-              "meds": [
-                { "key": "phenobarbital", "label": "Phenobarbital", "csvKey": "phenobarbital", "weight": 4 }
-              ]
-            },
-            {
-              "key": "overactive_bladder",
-              "title": "Overactive Bladder",
-              "meds": [
-                { "key": "oxybutynin",  "label": "Oxybutynin",  "csvKey": "oxybutynin",  "weight": 4 },
-                { "key": "solifenacin", "label": "Solifenacin", "csvKey": "solifenacin", "weight": 3 },
-                { "key": "tolterodine", "label": "Tolterodine", "csvKey": "tolterodine", "weight": 3 }
-              ]
-            },
-            {
-              "key": "diuretic",
-              "title": "Diuretic",
-              "meds": [
-                { "key": "furosemide", "label": "Furosemide", "csvKey": "furosemide", "weight": 1 }
-              ]
-            },
-            {
-              "key": "muscle_relaxant",
-              "title": "Skeletal Muscle Relaxants",
-              "meds": [
-                { "key": "carisoprodol",    "label": "Carisoprodol",    "csvKey": "carisoprodol",    "weight": 3 },
-                { "key": "cyclobenzaprine", "label": "Cyclobenzaprine", "csvKey": "cyclobenzaprine", "weight": 3 },
-                { "key": "methocarbamol",  "label": "Methocarbamol",   "csvKey": "methocarbamol",   "weight": 2 }
-              ]
-            },
-            {
-              "key": "non_benzo_sleep",
-              "title": "Non-Benzodiazepine Sleep Meds (Z-drugs)",
-              "meds": [
-                { "key": "eszopiclone", "label": "Eszopiclone", "csvKey": "eszopiclone", "weight": 3 },
-                { "key": "zaleplon",    "label": "Zaleplon",    "csvKey": "zaleplon",    "weight": 3 },
-                { "key": "zolpidem",    "label": "Zolpidem",    "csvKey": "zolpidem",    "weight": 3 },
-                { "key": "zopiclone",   "label": "Zopiclone",   "csvKey": "zopiclone",   "weight": 3 }
-              ]
-            },
-            {
-              "key": "opioid",
-              "title": "Opioid Pain Meds",
-              "meds": [
-                { "key": "fentanyl",   "label": "Fentanyl",   "csvKey": "fentanyl",   "weight": 3 },
-                { "key": "hydrocodone","label": "Hydrocodone","csvKey": "hydrocodone","weight": 3 },
-                { "key": "morphine",   "label": "Morphine",   "csvKey": "morphine",   "weight": 3 },
-                { "key": "oxycodone",  "label": "Oxycodone",  "csvKey": "oxycodone",  "weight": 3 }
-              ]
-            },
-            {
-              "key": "other_pain_anti_seizure",
-              "title": "Other Pain / Anti-Seizure",
-              "meds": [
-                { "key": "gabapentin", "label": "Gabapentin", "csvKey": "gabapentin", "weight": 2 },
-                { "key": "topiramate", "label": "Topiramate", "csvKey": "topiramate", "weight": 3 }
-              ]
-            },
-            {
-              "key": "analgesic",
-              "title": "Analgesic",
-              "meds": [
-                { "key": "acetaminophen", "label": "Acetaminophen", "csvKey": "acetaminophen", "weight": 0 }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "microplastics",
-      "title": "Micro/Nanoplastic Exposure Assessment",
-      "instruments": [
-        {
-          "key": "micro_selects",
-          "title": "Exposure Sources",
-          "type": "weighted_select",
-          "percentBands": [
-            { "max": 24, "label": "Low",       "level": "Some/Lower" },
-            { "min": 25, "max": 49, "label": "Moderate",  "level": "Moderate"   },
-            { "min": 50, "max": 74, "label": "High",      "level": "High"       },
-            { "min": 75,            "label": "Very High", "level": "Very High"  }
-          ],
-          "items": [
-            { "key": "packaging",    "label": "Packaging",      "csvKey": "packaging",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "kitchen",      "label": "Kitchen",        "csvKey": "kitchen",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "homegoods",    "label": "Homegoods",      "csvKey": "homegoods",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "personalcare", "label": "Personal Care",  "csvKey": "personalcare",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "textiles",     "label": "Textiles",       "csvKey": "textiles",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "outdoor",      "label": "Outdoor",        "csvKey": "outdoor",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "foods",
-      "title": "Brain Threat Foods & Additives Assessment",
-      "instruments": [
-        {
-          "key": "foods_selects",
-          "title": "Dietary Exposures",
-          "type": "weighted_select",
-          "percentBands": [
-            { "max": 24, "label": "Low",       "level": "Some/Lower" },
-            { "min": 25, "max": 49, "label": "Moderate",  "level": "Moderate"   },
-            { "min": 50, "max": 74, "label": "High",      "level": "High"       },
-            { "min": 75,            "label": "Very High", "level": "Very High"  }
-          ],
-          "items": [
-            { "key": "artificial_flavors",              "label": "Artificial Flavors",              "csvKey": "artificial_flavors",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "artificial_sweeteners",           "label": "Artificial Sweeteners",           "csvKey": "artificial_sweeteners",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "emulsifiers",                     "label": "Emulsifiers",                     "csvKey": "emulsifiers",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "fast_food",                       "label": "Fast Food",                       "csvKey": "fast_food",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "food_colorants",                  "label": "Food Colorants",                  "csvKey": "food_colorants",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "high_gi_breads",                  "label": "High GI Breads",                  "csvKey": "high_gi_breads",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "hydrogenated_fastfood_oils",      "label": "Hydrogenated Fast-food Oils",     "csvKey": "hydrogenated_fastfood_oils",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "industrial_fastfood_oils",        "label": "Industrial Fast-food Oils",       "csvKey": "industrial_fastfood_oils",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "instant_noodles",                 "label": "Instant Noodles",                 "csvKey": "instant_noodles",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "msg",                              "label": "MSG",                             "csvKey": "msg",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "natural_nonnutritive_sweeteners", "label": "Natural Non-nutritive Sweeteners","csvKey": "natural_nonnutritive_sweeteners",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "nitrates_nitrites",               "label": "Nitrates/Nitrites",               "csvKey": "nitrates_nitrites",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "packaged_snacks",                 "label": "Packaged Snacks",                 "csvKey": "packaged_snacks",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] }
-          ]
-        }
-      ]
-    },
-
-    {
-      "key": "toxins",
-      "title": "Toxin Exposure Assessment",
-      "instruments": [
-        {
-          "key": "toxins_selects",
-          "title": "Environmental Exposures",
-          "type": "weighted_select",
-          "percentBands": [
-            { "max": 24, "label": "Low",       "level": "Some/Lower" },
-            { "min": 25, "max": 49, "label": "Moderate",  "level": "Moderate"   },
-            { "min": 50, "max": 74, "label": "High",      "level": "High"       },
-            { "min": 75,            "label": "Very High", "level": "Very High"  }
-          ],
-          "items": [
-            { "key": "sel_water",        "label": "Drinking/Tap Water", "csvKey": "sel_water",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "sel_metals",       "label": "Metals",             "csvKey": "sel_metals",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "sel_pesticides",   "label": "Pesticides",         "csvKey": "sel_pesticides",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "sel_air",          "label": "Air Quality",        "csvKey": "sel_air",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "sel_pops",         "label": "POPs",               "csvKey": "sel_pops",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] },
-            { "key": "mold_mycotoxins",  "label": "Mold/Mycotoxins",    "csvKey": "mold_mycotoxins",
-              "options": [ { "value": 0, "label": "None" }, { "value": 1, "label": "Some" }, { "value": 2, "label": "Often" }, { "value": 3, "label": "Frequent" } ] }
-          ]
-        }
-      ]
-    }
-  ]
+  "medications": {
+    "items": [
+      { "class": "OTC Antacid (Pepcid, Tagamet)", "csvKey": "cimetidine", "label": "Cimetidine (Tagamet)" },
+      { "class": "OTC Antacid (Pepcid, Tagamet)", "csvKey": "famotidine", "label": "Famotidine (Pepcid)" },
+      { "class": "Anti-Seizure", "csvKey": "carbamazepine", "label": "Carbamazepine (Tegretol)" },
+      { "class": "Anti-Seizure", "csvKey": "divalproex", "label": "Divalproex (Depakote)" },
+      { "class": "Anti-Seizure", "csvKey": "valproate", "label": "Valproate (Depakote)" },
+      { "class": "Anti-Seizure", "csvKey": "gabapentin", "label": "Gabapentin (Neurontin)" },
+      { "class": "Anti-Seizure", "csvKey": "levetiracetam", "label": "Levetiracetam (Keppra)" },
+      { "class": "Anti-Seizure", "csvKey": "lamotrigine", "label": "Lamotrigine (Lamictal)" },
+      { "class": "Anti-Seizure", "csvKey": "topiramate", "label": "Topiramate (Topamax)" },
+      { "class": "Benzodiazepines", "csvKey": "alprazolam", "label": "Alprazolam (Xanax)" },
+      { "class": "Benzodiazepines", "csvKey": "clonazepam", "label": "Clonazepam (Klonopin)" },
+      { "class": "Benzodiazepines", "csvKey": "diazepam", "label": "Diazepam (Valium)" },
+      { "class": "Benzodiazepines", "csvKey": "lorazepam", "label": "Lorazepam (Ativan)" },
+      { "class": "Benzodiazepines", "csvKey": "temazepam", "label": "Temazepam (Restoril)" },
+      { "class": "Non-Benzo Sleep Agents", "csvKey": "eszopiclone", "label": "Eszopiclone (Lunesta)" },
+      { "class": "Non-Benzo Sleep Agents", "csvKey": "zaleplon", "label": "Zaleplon (Sonata)" },
+      { "class": "Non-Benzo Sleep Agents", "csvKey": "zolpidem", "label": "Zolpidem (Ambien)" },
+      { "class": "TCA Antidepressants", "csvKey": "amitriptyline", "label": "Amitriptyline (Elavil)" },
+      { "class": "TCA Antidepressants", "csvKey": "doxepin", "label": "Doxepin (Silenor)" },
+      { "class": "TCA Antidepressants", "csvKey": "imipramine", "label": "Imipramine (Tofranil)" },
+      { "class": "SSRIs/SNRIs/Other", "csvKey": "paroxetine", "label": "Paroxetine (Paxil)" },
+      { "class": "SSRIs/SNRIs/Other", "csvKey": "sertraline", "label": "Sertraline (Zoloft)" },
+      { "class": "SSRIs/SNRIs/Other", "csvKey": "fluoxetine", "label": "Fluoxetine (Prozac)" },
+      { "class": "SSRIs/SNRIs/Other", "csvKey": "venlafaxine", "label": "Venlafaxine (Effexor)" },
+      { "class": "SSRIs/SNRIs/Other", "csvKey": "duloxetine", "label": "Duloxetine (Cymbalta)" },
+      { "class": "Antipsychotics", "csvKey": "quetiapine", "label": "Quetiapine (Seroquel)" },
+      { "class": "Antipsychotics", "csvKey": "olanzapine", "label": "Olanzapine (Zyprexa)" },
+      { "class": "Antipsychotics", "csvKey": "risperidone", "label": "Risperidone (Risperdal)" },
+      { "class": "Anticholinergics (Bladder)", "csvKey": "oxybutynin", "label": "Oxybutynin (Ditropan)" },
+      { "class": "Anticholinergics (Bladder)", "csvKey": "tolterodine", "label": "Tolterodine (Detrol)" },
+      { "class": "Anticholinergics (Bladder)", "csvKey": "solifenacin", "label": "Solifenacin (Vesicare)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "diphenhydramine", "label": "Diphenhydramine (Benadryl)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "chlorpheniramine", "label": "Chlorpheniramine (Chlor-Trimeton)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "brompheniramine", "label": "Brompheniramine (Dimetapp)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "dimenhydrinate", "label": "Dimenhydrinate (Dramamine)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "doxylamine", "label": "Doxylamine (Unisom)" },
+      { "class": "Anticholinergics (Allergy/Cold)", "csvKey": "clemastine", "label": "Clemastine (Tavist)" },
+      { "class": "Anticholinergics (Parkinsonism)", "csvKey": "benztropine", "label": "Benztropine (Cogentin)" },
+      { "class": "Anticholinergics (Parkinsonism)", "csvKey": "trihexyphenidyl", "label": "Trihexyphenidyl (Artane)" },
+      { "class": "Muscle Relaxants", "csvKey": "cyclobenzaprine", "label": "Cyclobenzaprine (Flexeril)" },
+      { "class": "Muscle Relaxants", "csvKey": "tizanidine", "label": "Tizanidine (Zanaflex)" },
+      { "class": "Opioid Analgesics", "csvKey": "hydrocodone", "label": "Hydrocodone (Vicodin)" },
+      { "class": "Opioid Analgesics", "csvKey": "oxycodone", "label": "Oxycodone (OxyContin)" },
+      { "class": "Opioid Analgesics", "csvKey": "tramadol", "label": "Tramadol (Ultram)" },
+      { "class": "Opioid Analgesics", "csvKey": "codeine", "label": "Codeine (Tylenol #3)" },
+      { "class": "Sleep/Antihistamine OTC", "csvKey": "acetaminophen", "label": "Acetaminophen (Tylenol)" },
+      { "class": "Sleep/Antihistamine OTC", "csvKey": "melatonin", "label": "Melatonin" },
+      { "class": "Blood Pressure", "csvKey": "clonidine", "label": "Clonidine (Catapres)" },
+      { "class": "Blood Pressure", "csvKey": "propranolol", "label": "Propranolol (Inderal)" },
+      { "class": "Blood Pressure", "csvKey": "metoprolol", "label": "Metoprolol (Lopressor/Toprol-XL)" }
+    ]
+  },
+  "microplastics": {
+    "items": [
+      { "csvKey": "packaging", "label": "Food & Beverage Packaging", "weight": 3 },
+      { "csvKey": "kitchen", "label": "Kitchenware & Food Prep Items", "weight": 2 },
+      { "csvKey": "homegoods", "label": "Home Goods & Furnishings", "weight": 2 },
+      { "csvKey": "personalcare", "label": "Personal Care Products", "weight": 1 },
+      { "csvKey": "textiles", "label": "Synthetic Textiles & Laundry", "weight": 2 },
+      { "csvKey": "outdoor", "label": "Outdoor/Airborne Sources", "weight": 4 },
+      { "csvKey": "bisphenols", "label": "Bisphenols (e.g., BPA, BPS)", "weight": 4 },
+      { "csvKey": "additives", "label": "Other Plastic Additives", "weight": 1 }
+    ]
+  },
+  "toxins": {
+    "items": [
+      { "csvKey": "sel_water", "label": "Drinking/Tap Water" },
+      { "csvKey": "sel_metals", "label": "Heavy Metals" },
+      { "csvKey": "sel_pesticides", "label": "Pesticides" },
+      { "csvKey": "sel_air", "label": "Air Pollution" },
+      { "csvKey": "sel_pops", "label": "Persistent Organic Pollutants (POPs)" },
+      { "csvKey": "mold_mycotoxins", "label": "Mold/Mycotoxins" }
+    ]
+  },
+  "foods": {
+    "items": [
+      { "csvKey": "salt", "label": "Salt (added/processed)" },
+      { "csvKey": "saturated_fats", "label": "Saturated Fats" },
+      { "csvKey": "sugar_added", "label": "Sugar (added/refined)" },
+      { "csvKey": "processed_meats", "label": "Processed Meats" },
+      { "csvKey": "high_gi_breads", "label": "High-GI Breads & Baked Goods" },
+      { "csvKey": "unhealthy_cheeses", "label": "Processed/High-fat Cheeses" },
+      { "csvKey": "soft_drinks", "label": "Soft Drinks/Energy Drinks" },
+      { "csvKey": "packaged_snacks", "label": "Packaged Snacks" },
+      { "csvKey": "reconstituted_meats", "label": "Reconstituted/Ultra-Processed Meats" },
+      { "csvKey": "instant_noodles", "label": "Instant Noodles" },
+      { "csvKey": "breakfast_cereals", "label": "Ultra-Processed Breakfast Cereals" },
+      { "csvKey": "frozen_meals", "label": "Frozen Ready-Meals" },
+      { "csvKey": "baked_goods", "label": "Packaged Sweets/Baked Goods" },
+      { "csvKey": "fried_fast_foods", "label": "Deep-fried/Fast Foods" },
+      { "csvKey": "trans_fats", "label": "Trans Fats/Partially Hydrogenated Oils" },
+      { "csvKey": "emulsifiers", "label": "Emulsifiers/Stabilizers" },
+      { "csvKey": "titanium_dioxide", "label": "Titanium Dioxide (E171)" },
+      { "csvKey": "msg", "label": "Monosodium Glutamate (MSG)" },
+      { "csvKey": "artificial_flavors", "label": "Artificial Flavors" },
+      { "csvKey": "artificial_colors", "label": "Artificial Colors" },
+      { "csvKey": "nitrates_nitrites", "label": "Nitrates/Nitrites" },
+      { "csvKey": "hfcs", "label": "High-Fructose Corn Syrup" },
+      { "csvKey": "refined_grains", "label": "Refined Grains" },
+      { "csvKey": "ultra_processed_desserts", "label": "Ultra-Processed Desserts" },
+      { "csvKey": "high_gi_snacks", "label": "High-GI Snacks" }
+    ]
+  }
 }
