@@ -1,81 +1,88 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Cache-Control" content="no-store" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Brain Threat Analysis — Standalone</title>
+  <title>Brain Threat Analysis — Standalone App</title>
 
-  <!-- Minimal baseline styles; you may remove if you already have a CSS file -->
+  <!-- Keep original stylesheet as requested -->
+  <link rel="stylesheet" href="assets/ui.css" />
+
+  <!-- Minimal inline styles for structural elements (non-conflicting) -->
   <style>
-    :root{
-      --bg:#f8f9fb; --card:#ffffff; --ink:#1e293b; --muted:#64748b; --accent:#0f766e; --warn:#b91c1c; --line:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    a{color:var(--accent);text-decoration:none}
-    .container{max-width:980px;margin:0 auto;padding:16px}
-    #bt-topnav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
-    #bt-title{font-size:1.25rem;font-weight:700;letter-spacing:.2px}
-    #bt-version{font-size:.85rem;color:var(--muted)}
-    #bt-alert{display:none;margin:8px 0 16px;background:#fee2e2;border:1px solid #fecaca;color:var(--warn);padding:12px;border-radius:8px;white-space:pre-wrap}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03);margin:12px 0;overflow:hidden}
-    .card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none}
-    .card-header .title{display:flex;align-items:center;gap:10px;font-weight:600}
-    .caret{font-family:monospace;display:inline-block;transform:translateY(-1px)}
-    .card-body{display:none;border-top:1px solid var(--line);padding:16px}
-    .card-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
-    button{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 12px;border-radius:10px;cursor:pointer}
-    button.primary{background:var(--accent);border-color:var(--accent);color:white}
-    button.ghost{background:#fff}
-    button.danger{border-color:#fecaca;color:var(--warn);background:#fff}
-    #bt-summary-block{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:20px 0}
-    #bt-summary-content{white-space:pre-wrap}
-    .muted{color:var(--muted)}
-    .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+    /* Non-invasive helpers; keep to IDs only to avoid overriding ui.css */
+    #app { max-width: 1100px; margin: 0 auto; padding: 12px; }
+    #error-banner { display: none; margin: 12px 0; padding: 12px; border: 2px solid #b30000; background: #ffe6e6; color: #b30000; font-weight: 600; }
+    #global-actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+    #summary-block { margin-top: 16px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Top Bar -->
-    <header id="bt-topnav" role="banner" aria-label="Top navigation">
-      <div id="bt-title">Brain Threat Analysis</div>
-      <div id="bt-version" class="muted">Standalone • Deterministic</div>
-    </header>
-
-    <!-- Runtime assertion banner (shown by JS if any CSV/keys mismatch) -->
-    <div id="bt-alert" role="alert" aria-live="assertive"></div>
-
-    <!-- Category cards are injected here by assets/app.js based on data/instruments_config.json -->
-    <main id="bt-categories" role="main" aria-label="Assessment categories"></main>
-
-    <!-- Summary block (always present below categories) -->
-    <section id="bt-summary-block" aria-label="Summary and actions">
-      <h2 style="margin:0 0 8px 0;">Summary</h2>
-      <div id="bt-summary-content" class="muted">Complete or update the questionnaires above to generate a summary here.</div>
-
-      <div class="card-actions" style="margin-top:12px;">
-        <button id="btn-copy-summary" class="primary" type="button">Copy Summary</button>
-        <button id="btn-clear-all" class="danger" type="button">Clear Form</button>
-      </div>
-    </section>
-
-    <footer class="muted" style="margin:24px 0 12px;">
-      <small>Data sources: <code>data/instruments_config.json</code> (structure, scoring) &middot; <code>data/master.csv</code> (helper text, brand names)</small>
-    </footer>
-  </div>
-
   <noscript>
-    <div class="container">
-      <div id="bt-alert" style="display:block">JavaScript is required to run this assessment.</div>
+    <div style="padding:12px;border:2px solid #b30000;background:#ffe6e6;color:#b30000;">
+      This application requires JavaScript to run.
     </div>
   </noscript>
 
-  <!-- App scripts (load order matters). All modules use fetch(..., { cache: 'no-store' }) -->
-  <script src="assets/config.js" defer></script>
-  <script src="assets/scoring.js" defer></script>
-  <script src="assets/summary.js" defer></script>
-  <script src="assets/app.js" defer></script>
+  <div id="app" role="application" aria-label="Brain Threat Analysis App">
+    <!-- RED BANNER: shown by app.js when strict-contract validation fails -->
+    <div id="error-banner" role="alert" aria-live="assertive"></div>
+
+    <!-- App Header -->
+    <header>
+      <h1>Brain Threat Analysis</h1>
+      <p class="subtitle">Clean rebuild from WordPress code + master.csv (strict contract; no heuristics)</p>
+    </header>
+
+    <!-- Summary (rendered by summary.js after user interaction) -->
+    <section id="summary-block" aria-label="Summary">
+      <h2>Summary</h2>
+      <div id="summary-content">
+        <!-- summary.js will populate structured, category-level and global summaries -->
+      </div>
+
+      <!-- Global actions placed BELOW the summary per requirement -->
+      <div id="global-actions">
+        <button id="copy-summary-btn" type="button" aria-label="Copy summary to clipboard">
+          Copy Summary
+        </button>
+        <button id="clear-form-btn" type="button" aria-label="Clear all answers and recollapse all sections">
+          Clear Form
+        </button>
+      </div>
+    </section>
+
+    <!-- Categories container; app.js will render ALL seven top-level, collapsed on load -->
+    <section id="categories" aria-label="Top-level categories">
+      <!--
+        app.js renders these EXACT seven top-level sections as collapsed accordions (▸ closed; ▾ open):
+          1) Personal History
+             - contains collapsible questionnaires: Personal History (core), Medical & Lifestyle, Sleep, Stress, Physical Activity
+          2) Social & Loneliness Assessment (LSNS-6, UCLA-3)
+          3) Sensory Assessment
+             - sub-accordions: Hearing (HHIE-S), Vision (VFQ-3of7), both collapsed on load
+          4) Medication Threat Assessment (meds show generic + brand_name from CSV)
+          5) Micro/Nanoplastic Exposure Assessment (helper text from CSV threat column)
+          6) Toxin Exposure Assessment (helper text from CSV threat column)
+          7) Brain Threat Foods and Additives Assessment (helper text from CSV threat column)
+
+        Each top-level section includes a “Clear This Section” button that resets ONLY that section
+        and re-collapses it. All fetch() calls use { cache: "no-store" } inside scripts.
+      -->
+    </section>
+
+    <!-- Footer note (optional, non-functional) -->
+    <footer style="margin-top:24px;">
+      <p class="sr-only">All data loads are performed with no-store caching and strict CSV contract: item_key → threat/brand_name only.</p>
+    </footer>
+  </div>
+
+  <!-- Scripts: load order matters. config → scoring → summary → app -->
+  <script defer src="assets/config.js"></script>
+  <script defer src="assets/scoring.js"></script>
+  <script defer src="assets/summary.js"></script>
+  <script defer src="assets/app.js"></script>
 </body>
 </html>
