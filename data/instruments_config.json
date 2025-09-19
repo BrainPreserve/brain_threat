@@ -1,93 +1,288 @@
 {
   "medications": {
     "items": [
-      { "csvKey": "acetaminophen", "label": "Acetaminophen", "class": "Analgesic" },
-      { "csvKey": "alprazolam", "label": "Alprazolam", "class": "Benzodiazepine" },
-      { "csvKey": "amitriptyline", "label": "Amitriptyline", "class": "TCA Antidepressant" },
-      { "csvKey": "benztropine", "label": "Benztropine", "class": "Antiparkinsonian" },
-      { "csvKey": "brompheniramine", "label": "Brompheniramine", "class": "Antihistamine" },
-      { "csvKey": "carbamazepine", "label": "Carbamazepine", "class": "Anticonvulsant" },
-      { "csvKey": "carisoprodol", "label": "Carisoprodol", "class": "Muscle relaxant" },
-      { "csvKey": "chlorpheniramine", "label": "Chlorpheniramine", "class": "Antihistamine" },
-      { "csvKey": "chlorpromazine", "label": "Chlorpromazine", "class": "Antipsychotic" },
-      { "csvKey": "cimetidine", "label": "Cimetidine", "class": "H2 blocker / Antacid" },
-      { "csvKey": "citalopram", "label": "Citalopram", "class": "SSRI Antidepressant" },
-      { "csvKey": "clemastine", "label": "Clemastine", "class": "Antihistamine" },
-      { "csvKey": "clonazepam", "label": "Clonazepam", "class": "Benzodiazepine" },
-      { "csvKey": "cyclobenzaprine", "label": "Cyclobenzaprine", "class": "Muscle relaxant (TCA-like)" },
-      { "csvKey": "diazepam", "label": "Diazepam", "class": "Benzodiazepine" },
-      { "csvKey": "dimenhydrinate", "label": "Dimenhydrinate", "class": "Antihistamine / Antiemetic" },
-      { "csvKey": "diphenhydramine", "label": "Diphenhydramine", "class": "Antihistamine (sedating)" },
-      { "csvKey": "doxepin", "label": "Doxepin", "class": "TCA Antidepressant" },
-      { "csvKey": "felodipine", "label": "Felodipine", "class": "Calcium channel blocker" },
-      { "csvKey": "fentanyl", "label": "Fentanyl", "class": "Opioid analgesic" },
-      { "csvKey": "furosemide", "label": "Furosemide", "class": "Loop diuretic" },
-      { "csvKey": "gabapentin", "label": "Gabapentin", "class": "Anticonvulsant" },
-      { "csvKey": "haloperidol", "label": "Haloperidol", "class": "Antipsychotic" },
-      { "csvKey": "hydrocodone", "label": "Hydrocodone", "class": "Opioid analgesic" },
-      { "csvKey": "lorazepam", "label": "Lorazepam", "class": "Benzodiazepine" },
-      { "csvKey": "meclizine", "label": "Meclizine", "class": "Antihistamine / Antiemetic" },
-      { "csvKey": "methocarbamol", "label": "Methocarbamol", "class": "Muscle relaxant" },
-      { "csvKey": "mirtazapine", "label": "Mirtazapine", "class": "Antidepressant" },
-      { "csvKey": "morphine", "label": "Morphine", "class": "Opioid analgesic" },
-      { "csvKey": "olanzapine", "label": "Olanzapine", "class": "Antipsychotic" },
-      { "csvKey": "oxazepam", "label": "Oxazepam", "class": "Benzodiazepine" },
-      { "csvKey": "oxybutynin", "label": "Oxybutynin", "class": "Bladder anticholinergic" },
-      { "csvKey": "oxycodone", "label": "Oxycodone", "class": "Opioid analgesic" },
-      { "csvKey": "paroxetine", "label": "Paroxetine", "class": "SSRI Antidepressant" },
-      { "csvKey": "phenobarbital", "label": "Phenobarbital", "class": "Barbiturate" },
-      { "csvKey": "quetiapine", "label": "Quetiapine", "class": "Antipsychotic" },
-      { "csvKey": "risperidone", "label": "Risperidone", "class": "Antipsychotic" },
-      { "csvKey": "sertraline", "label": "Sertraline", "class": "SSRI Antidepressant" },
-      { "csvKey": "solifenacin", "label": "Solifenacin", "class": "Bladder anticholinergic" },
-      { "csvKey": "tolterodine", "label": "Tolterodine", "class": "Bladder anticholinergic" },
-      { "csvKey": "topiramate", "label": "Topiramate", "class": "Anticonvulsant" },
-      { "csvKey": "trihexyphenidyl", "label": "Trihexyphenidyl", "class": "Antiparkinsonian" },
-      { "csvKey": "valproate", "label": "Valproate", "class": "Anticonvulsant" },
-      { "csvKey": "zaleplon", "label": "Zaleplon", "class": "Non-benzo sleep agent" },
-      { "csvKey": "zolpidem", "label": "Zolpidem", "class": "Non-benzo sleep agent" },
-      { "csvKey": "zopiclone", "label": "Zopiclone", "class": "Non-benzo sleep agent" }
+      {
+        "csvKey": "acetaminophen"
+      },
+      {
+        "csvKey": "alprazolam"
+      },
+      {
+        "csvKey": "amitriptyline"
+      },
+      {
+        "csvKey": "benztropine"
+      },
+      {
+        "csvKey": "brompheniramine"
+      },
+      {
+        "csvKey": "carbamazepine"
+      },
+      {
+        "csvKey": "carisoprodol"
+      },
+      {
+        "csvKey": "chlorpheniramine"
+      },
+      {
+        "csvKey": "chlorpromazine"
+      },
+      {
+        "csvKey": "cimetidine"
+      },
+      {
+        "csvKey": "citalopram"
+      },
+      {
+        "csvKey": "clemastine"
+      },
+      {
+        "csvKey": "clonazepam"
+      },
+      {
+        "csvKey": "cyclobenzaprine"
+      },
+      {
+        "csvKey": "diazepam"
+      },
+      {
+        "csvKey": "dimenhydrinate"
+      },
+      {
+        "csvKey": "diphenhydramine"
+      },
+      {
+        "csvKey": "divalproex"
+      },
+      {
+        "csvKey": "doxepin"
+      },
+      {
+        "csvKey": "doxylamine"
+      },
+      {
+        "csvKey": "escitalopram"
+      },
+      {
+        "csvKey": "eszopiclone"
+      },
+      {
+        "csvKey": "famotidine"
+      },
+      {
+        "csvKey": "felodipine"
+      },
+      {
+        "csvKey": "fentanyl"
+      },
+      {
+        "csvKey": "furosemide"
+      },
+      {
+        "csvKey": "gabapentin"
+      },
+      {
+        "csvKey": "haloperidol"
+      },
+      {
+        "csvKey": "hydrocodone"
+      },
+      {
+        "csvKey": "lorazepam"
+      },
+      {
+        "csvKey": "meclizine"
+      },
+      {
+        "csvKey": "methocarbamol"
+      },
+      {
+        "csvKey": "mirtazapine"
+      },
+      {
+        "csvKey": "morphine"
+      },
+      {
+        "csvKey": "olanzapine"
+      },
+      {
+        "csvKey": "oxazepam"
+      },
+      {
+        "csvKey": "oxybutynin"
+      },
+      {
+        "csvKey": "oxycodone"
+      },
+      {
+        "csvKey": "paroxetine"
+      },
+      {
+        "csvKey": "phenobarbital"
+      },
+      {
+        "csvKey": "quetiapine"
+      },
+      {
+        "csvKey": "risperidone"
+      },
+      {
+        "csvKey": "sertraline"
+      },
+      {
+        "csvKey": "solifenacin"
+      },
+      {
+        "csvKey": "tolterodine"
+      },
+      {
+        "csvKey": "topiramate"
+      },
+      {
+        "csvKey": "trihexyphenidyl"
+      },
+      {
+        "csvKey": "valproate"
+      },
+      {
+        "csvKey": "zaleplon"
+      },
+      {
+        "csvKey": "zolpidem"
+      },
+      {
+        "csvKey": "zopiclone"
+      }
     ]
   },
   "microplastics": {
     "items": [
-      { "csvKey": "packaging",    "label": "Food & Beverage Packaging",          "weight": 3 },
-      { "csvKey": "kitchen",       "label": "Kitchenware & Food Prep Items",      "weight": 2 },
-      { "csvKey": "homegoods",     "label": "Home Goods & Furnishings",           "weight": 2 },
-      { "csvKey": "personalcare",  "label": "Personal Care Products",             "weight": 1 },
-      { "csvKey": "textiles",      "label": "Synthetic Textiles & Laundry",       "weight": 2 },
-      { "csvKey": "outdoor",       "label": "Outdoor/Airborne Sources",           "weight": 4 },
-      { "csvKey": "bisphenols",    "label": "Bisphenols (e.g., BPA, BPS)",        "weight": 4 },
-      { "csvKey": "additives",     "label": "Other Plastic Additives",            "weight": 1 }
+      {
+        "csvKey": "additives"
+      },
+      {
+        "csvKey": "bisphenols"
+      },
+      {
+        "csvKey": "homegoods"
+      },
+      {
+        "csvKey": "kitchen"
+      },
+      {
+        "csvKey": "outdoor"
+      },
+      {
+        "csvKey": "packaging"
+      },
+      {
+        "csvKey": "personalcare"
+      },
+      {
+        "csvKey": "textiles"
+      }
     ]
   },
   "toxins": {
     "items": [
-      { "csvKey": "sel_water",        "label": "Drinking/Tap Water" },
-      { "csvKey": "sel_metals",       "label": "Heavy Metals" },
-      { "csvKey": "sel_pesticides",   "label": "Pesticides" },
-      { "csvKey": "sel_air",          "label": "Air Pollution" },
-      { "csvKey": "sel_pops",         "label": "Persistent Organic Pollutants (POPs)" },
-      { "csvKey": "mold_mycotoxins",  "label": "Mold/Mycotoxins" }
+      {
+        "csvKey": "mold_mycotoxins"
+      },
+      {
+        "csvKey": "sel_air"
+      },
+      {
+        "csvKey": "sel_metals"
+      },
+      {
+        "csvKey": "sel_pesticides"
+      },
+      {
+        "csvKey": "sel_pops"
+      },
+      {
+        "csvKey": "sel_water"
+      }
     ]
   },
   "foods": {
     "items": [
-      { "csvKey": "salt",                 "label": "Salt (added/processed)" },
-      { "csvKey": "saturated_fats",       "label": "Saturated Fats" },
-      { "csvKey": "sugar_added",          "label": "Sugar (added/refined)" },
-      { "csvKey": "processed_meats",      "label": "Processed Meats" },
-      { "csvKey": "high_gi_breads",       "label": "High-GI Breads & Baked Goods" },
-      { "csvKey": "unhealthy_cheeses",    "label": "Processed/High-fat Cheeses" },
-      { "csvKey": "soft_drinks",          "label": "Soft Drinks/Energy Drinks" },
-      { "csvKey": "packaged_snacks",      "label": "Packaged Snacks" },
-      { "csvKey": "reconstituted_meats",  "label": "Reconstituted/Ultra-Processed Meats" },
-      { "csvKey": "instant_noodles",      "label": "Instant Noodles" },
-      { "csvKey": "titanium_dioxide",     "label": "Titanium Dioxide (E171)" },
-      { "csvKey": "emulsifiers",          "label": "Emulsifiers/Stabilizers" },
-      { "csvKey": "msg",                  "label": "Monosodium Glutamate (MSG)" },
-      { "csvKey": "artificial_flavors",   "label": "Artificial Flavors" },
-      { "csvKey": "food_colorants",       "label": "Artificial Colors / Food Colorants" }
+      {
+        "csvKey": "artificial_flavors"
+      },
+      {
+        "csvKey": "artificial_sweeteners"
+      },
+      {
+        "csvKey": "emulsifiers"
+      },
+      {
+        "csvKey": "fast_food"
+      },
+      {
+        "csvKey": "food_colorants"
+      },
+      {
+        "csvKey": "high_gi_breads"
+      },
+      {
+        "csvKey": "hydrogenated_fastfood_oils"
+      },
+      {
+        "csvKey": "industrial_fastfood_oils"
+      },
+      {
+        "csvKey": "instant_noodles"
+      },
+      {
+        "csvKey": "msg"
+      },
+      {
+        "csvKey": "natural_nonnutritive_sweeteners"
+      },
+      {
+        "csvKey": "nitrates_nitrites"
+      },
+      {
+        "csvKey": "packaged_snacks"
+      },
+      {
+        "csvKey": "phthalates_bisphenols"
+      },
+      {
+        "csvKey": "preservatives"
+      },
+      {
+        "csvKey": "processed_meats"
+      },
+      {
+        "csvKey": "rare_sugars"
+      },
+      {
+        "csvKey": "reconstituted_meats"
+      },
+      {
+        "csvKey": "salt"
+      },
+      {
+        "csvKey": "saturated_fats"
+      },
+      {
+        "csvKey": "soft_drinks"
+      },
+      {
+        "csvKey": "sugar_added"
+      },
+      {
+        "csvKey": "sugar_alcohols"
+      },
+      {
+        "csvKey": "titanium_dioxide"
+      },
+      {
+        "csvKey": "unhealthy_cheeses"
+      }
     ]
   }
 }
