@@ -32,7 +32,6 @@
   };
 
   // DOM refs
-  const $app = document.getElementById("app");
   const $cats = document.getElementById("categories");
   const $banner = document.getElementById("error-banner");
   const $copySummary = document.getElementById("copy-summary-btn");
@@ -148,7 +147,7 @@
 
     // Helper: walk items arrays looking for csvKey
     function checkItems(sectionName, items) {
-      for (const it of items) {
+      for (const it of items || []) {
         if (it && typeof it.csvKey === "string" && it.csvKey.length > 0) {
           const k = lc(it.csvKey);
           if (!STATE.csvKeys.has(k)) addMissing(sectionName, it.csvKey);
@@ -156,19 +155,10 @@
       }
     }
 
-    // Check across known blocks
-    if (instruments.medications?.items) {
-      checkItems("Medications", instruments.medications.items);
-    }
-    if (instruments.microplastics?.items) {
-      checkItems("Micro/Nanoplastic Exposure", instruments.microplastics.items);
-    }
-    if (instruments.toxins?.items) {
-      checkItems("Toxin Exposure", instruments.toxins.items);
-    }
-    if (instruments.foods?.items) {
-      checkItems("Brain Threat Foods & Additives", instruments.foods.items);
-    }
+    checkItems("Medications", instruments?.medications?.items);
+    checkItems("Micro/Nanoplastic Exposure", instruments?.microplastics?.items);
+    checkItems("Toxin Exposure", instruments?.toxins?.items);
+    checkItems("Brain Threat Foods & Additives", instruments?.foods?.items);
 
     if (missing.length) {
       showRedBanner(
@@ -352,17 +342,17 @@
       lbl.className = "opt block";
       const inp = document.createElement("input");
       inp.type = "checkbox";
-      inp.name = `${sectionLabel}.${item.key || item.csvKey || ""}`;
+      inp.name = `${sectionLabel}.${item.csvKey || item.key || ""}`;
       inp.value = "1";
       lbl.appendChild(inp);
 
-      const displayKey = item.key || item.csvKey || "";
+      const displayKey = item.csvKey || item.key || "";
       const baseName = item.label || displayKey;
       let finalLabel = baseName;
 
       if (mode === "meds") {
         // Append brand name in parentheses; STRICT: brand must be from CSV
-        const b = STATE.brandByKey[lc(item.csvKey || item.key)];
+        const b = STATE.brandByKey[lc(displayKey)];
         if (b && b.trim()) {
           finalLabel = `${baseName} (${b})`;
         } else {
@@ -379,7 +369,7 @@
       row.appendChild(lbl);
 
       if (mode === "helper") {
-        const t = STATE.threatByKey[lc(item.csvKey || item.key)] || "";
+        const t = STATE.threatByKey[lc(displayKey)] || "";
         // STRICT: helper text must be present for these sections
         if (!t) {
           showRedBanner(
@@ -475,17 +465,11 @@
 
     // 1) Personal History (with nested questionnaires)
     const secPersonal = makeAccordion({ id: "personal", label: "Personal History", startOpen: false });
-    // Sub-forms inside this section, all collapsed individually using smaller accordions
-    // a) Personal History questionnaire (yes-tier mapping)
-    renderYNGrid(secPersonal.body, CONFIG.categories[0].instruments[0]);
-    // b) Medical & Lifestyle questionnaire
-    renderYNGrid(secPersonal.body, CONFIG.categories[0].instruments[1]);
-    // c) Sleep Likert
-    renderLikertGroup(secPersonal.body, CONFIG.categories[0].instruments[2], CONFIG.categories[0].instruments[2].scale);
-    // d) Stress Likert (with reverse scoring handled in SCORING later)
-    renderLikertGroup(secPersonal.body, CONFIG.categories[0].instruments[3], CONFIG.categories[0].instruments[3].scale);
-    // e) Physical Activity Y/N
-    renderYNGrid(secPersonal.body, CONFIG.categories[0].instruments[4]);
+    renderYNGrid   (secPersonal.body, CONFIG.categories[0].instruments[0]); // Personal History
+    renderYNGrid   (secPersonal.body, CONFIG.categories[0].instruments[1]); // Medical & Lifestyle
+    renderLikertGroup(secPersonal.body, CONFIG.categories[0].instruments[2], CONFIG.categories[0].instruments[2].scale); // Sleep
+    renderLikertGroup(secPersonal.body, CONFIG.categories[0].instruments[3], CONFIG.categories[0].instruments[3].scale); // Stress
+    renderYNGrid   (secPersonal.body, CONFIG.categories[0].instruments[4]); // Physical Activity
     $cats.appendChild(secPersonal.wrap);
 
     // 2) Social & Loneliness
@@ -509,11 +493,8 @@
     // 4) Medications (from instruments_config.json, with brand names)
     const secMeds = makeAccordion({ id: "meds", label: "Medication Threat Assessment", startOpen: false });
     if (STATE.instruments?.medications?.items?.length) {
-      // Group by class if provided; otherwise flat
-      const groups = groupBy(STATE.instruments.medications.items, it => it.class || "Medications");
-      for (const [gname, items] of groups.entries()) {
-        renderChecklistWithHelpers(secMeds.body, gname, items, "meds");
-      }
+      // If no class provided, render as a single group titled "Medications" (no heuristics).
+      renderChecklistWithHelpers(secMeds.body, "Medications", STATE.instruments.medications.items, "meds");
     }
     $cats.appendChild(secMeds.wrap);
 
@@ -542,16 +523,6 @@
     wireLiveUpdates();
   }
 
-  function groupBy(arr, fn) {
-    const m = new Map();
-    for (const x of arr || []) {
-      const k = String(fn(x));
-      if (!m.has(k)) m.set(k, []);
-      m.get(k).push(x);
-    }
-    return m;
-  }
-
   // ---------- INIT ----------
 
   async function init() {
@@ -565,6 +536,9 @@
       // 2) Load instruments_config.json (declares items & csvKey per item)
       const instruments = await loadJSON(INSTR_PATH);
       STATE.instruments = instruments;
+
+      // Expose for summary.js (single line fix)
+      window.__INSTRUMENTS__ = instruments;
 
       // 3) Validate that every declared csvKey exists in CSV
       validateInstrumentCsvKeys(instruments);
